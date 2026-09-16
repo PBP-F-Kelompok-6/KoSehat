@@ -15,9 +15,9 @@ Mahasiswa Universitas Indonesia yang tinggal di kos atau asrama dan ingin memben
 * **Pengguna (Mahasiswa UI):** Mengelola profil pribadi, menyusun jadwal perencanaan makan sehat, mencatat aktivitas olahraga harian, memantau durasi tidur dan tingkat hidrasi, serta melihat statistik perkembangan kebiasaan harian.
 * **Admin:** Mengelola katalog resep makanan sehat hemat, memperbarui daftar panduan olahraga ringan, serta menguraikan konten edukasi gaya hidup ramah lingkungan.
 
-## Integrasi Public API / Mock API
+## Integrasi Public API
 * **Spoonacular API / Edamam API:** Mengambil basis data resep masakan sehat beserta informasi nilai gizi.
-* **ExerciseDB API / Mock API:** Menyediakan katalog pilihan latihan fisik dan olahraga ringan tanpa alat yang dapat dilakukan di area kamar kos atau kampus.
+* **ExerciseDB API:** Menyediakan katalog pilihan latihan fisik dan olahraga ringan tanpa alat yang dapat dilakukan di area kamar kos atau kampus.
 
 ## Daftar Modul & Pembagian Anggota Kelompok
 
