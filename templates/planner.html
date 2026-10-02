@@ -1,0 +1,79 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}Meal Planner - KoSehat{% endblock title %}
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/meal_planner.css' %}" />
+{% endblock extra_css %}
+
+{% block content %}
+<div class="mp-page">
+  <h2 class="font-serif-heading mp-title">Meal Planner & Eco-Diet</h2>
+  <p class="mp-subtitle">Rencanakan menu sehat, hemat, dan minim kemasan sekali pakai.</p>
+
+  <!-- Navigasi minggu (TODO: sambungkan ke ?start=) -->
+  <div class="mp-week-nav">
+    <a class="mp-btn mp-btn-light" href="#">&larr; Minggu lalu</a>
+    <strong>{{ start|date:"j M" }} &ndash; {{ end|date:"j M Y" }}</strong>
+    <a class="mp-btn mp-btn-light" href="#">Minggu depan &rarr;</a>
+  </div>
+
+  <!-- Ringkasan mingguan -->
+  <div class="mp-stats">
+    <div class="mp-card">
+      <span class="mp-stat-label">Menu terjadwal</span>
+      <span class="mp-stat-value">{{ week_meal_count }}</span>
+    </div>
+    <div class="mp-card">
+      <span class="mp-stat-label">Total biaya</span>
+      <span class="mp-stat-value">Rp {{ week_cost|floatformat:"0g" }}</span>
+    </div>
+    <div class="mp-card">
+      <span class="mp-stat-label">Masak sendiri</span>
+      <span class="mp-stat-value">{{ week_homemade_count }}</span>
+    </div>
+    <div class="mp-card mp-card-eco">
+      <span class="mp-stat-label">Kemasan dihindari</span>
+      <span class="mp-stat-value">{{ week_packaging_avoided }}</span>
+    </div>
+  </div>
+
+  <!-- Jadwal per hari -->
+  <div class="mp-week-grid">
+    {% for day in days %}
+    <section class="mp-card mp-day {% if day.is_today %}is-today{% endif %}">
+      <header class="mp-day-header">
+        <div>
+          <h3>{{ day.label }}</h3>
+          <small class="mp-muted">{{ day.date|date:"j M" }}</small>
+        </div>
+        <!-- TODO: link ke form tambah menu -->
+        <a class="mp-btn mp-btn-small" href="#">+ Tambah</a>
+      </header>
+
+      {% for meal in day.meals %}
+      <div class="mp-meal">
+        <span class="mp-meal-type">{{ meal.get_meal_type_display }}</span>
+        <p class="mp-meal-name">{{ meal.name }}</p>
+        <small class="mp-muted">
+          Rp {{ meal.estimated_cost|floatformat:"0g" }}{% if meal.calories %} &bull; {{ meal.calories }} kkal{% endif %}
+        </small>
+        {% if meal.is_homemade or meal.packaging_avoided %}
+        <div class="mp-badges">
+          {% if meal.is_homemade %}<span class="mp-badge">Masak sendiri</span>{% endif %}
+          {% if meal.packaging_avoided %}<span class="mp-badge">{{ meal.packaging_avoided }} kemasan dihindari</span>{% endif %}
+        </div>
+        {% endif %}
+        <!-- TODO: tombol ubah / hapus -->
+      </div>
+      {% empty %}
+      <p class="mp-muted mp-empty">Belum ada menu.</p>
+      {% endfor %}
+
+      {% if day.meals %}
+      <footer class="mp-day-total">Total: Rp {{ day.cost|floatformat:"0g" }}</footer>
+      {% endif %}
+    </section>
+    {% endfor %}
+  </div>
+</div>
+{% endblock content %}

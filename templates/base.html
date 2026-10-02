@@ -65,7 +65,7 @@
 
             <!-- Meal Planner -->
             <a
-              href=""
+              href="{% url 'meal_planner:index' %}"
               class="nav-link {% if request.resolver_match.namespace == 'meal_planner' or request.resolver_match.url_name == 'meal_planner' %}active{% endif %}"
             >
               <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
