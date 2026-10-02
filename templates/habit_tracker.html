@@ -1,0 +1,12 @@
+{% extends 'base.html' %} {% load static %} {% block title %}Tracker Kesehatan -
+KoSehat{% endblock title %} {% block extra_css %}
+<!-- Menghubungkan CSS spesifik milik modul ini -->
+<link rel="stylesheet" href="{% static 'css/habit_tracker.css' %}" />
+{% endblock extra_css %} {% block content %}
+<div class="habit-card">
+  <h2 class="habit-title">
+    Tracker Kesehatan untuk mengatur pola hidup sehat.
+  </h2>
+  <!-- Konten spesifik modul tracker kesehatan -->
+</div>
+{% endblock content %}
