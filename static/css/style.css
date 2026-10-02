@@ -1,0 +1,331 @@
+/* Google Fonts Import */
+@import url("https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap");
+
+/* ==========================================================================
+   GLOBAL VARIABLES (:root)
+   Variabel ini dipakai bersama oleh style.css dan CSS spesifik tiap modul
+   ========================================================================== */
+:root {
+  /* Color Palette - KoSehat Theme */
+  --bg-main: #f4f3ea;
+  --bg-sidebar: #313e1a;
+  --bg-sidebar-card: #3e4d22;
+  --bg-sidebar-card-border: #4c5e2b;
+  --bg-sidebar-progress: #2a3516;
+
+  --color-active: #e6ee9c;
+  --color-active-text: #232e10;
+  --color-sidebar-text: #d2dcb6;
+  --color-sidebar-muted: #8fa468;
+  --color-sidebar-border: #415124;
+
+  --color-text-main: #1a1a1a;
+  --color-text-dark: #232e10;
+  --color-text-muted: #6b7280;
+  --color-white: #ffffff;
+
+  /* Typography */
+  --font-sans:
+    "Plus Jakarta Sans", -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-serif: "Playfair Display", Georgia, serif;
+
+  /* Spacing & Radii */
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-full: 9999px;
+  --sidebar-width: 260px;
+}
+
+/* ==========================================================================
+   RESET & BASE STYLES
+   ========================================================================== */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: var(--font-sans);
+  background-color: var(--bg-main);
+  color: var(--color-text-main);
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+}
+
+.app-container {
+  display: flex;
+  width: 100%;
+  min-height: 100vh;
+}
+
+/* ==========================================================================
+   SIDEBAR LAYOUT & COMPONENTS
+   ========================================================================== */
+.sidebar {
+  width: var(--sidebar-width);
+  background-color: var(--bg-sidebar);
+  color: var(--color-white);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 20px;
+  height: 100vh;
+  position: sticky;
+  top: 0;
+  overflow-y: auto;
+  flex-shrink: 0;
+}
+
+.sidebar-brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 32px;
+  padding: 8px 8px 0 8px;
+}
+
+.brand-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background-color: var(--color-active);
+  color: var(--bg-sidebar);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+}
+
+.brand-text h1 {
+  font-size: 1.125rem;
+  font-weight: 700;
+  line-height: 1;
+  color: var(--color-white);
+}
+
+.brand-text p {
+  font-size: 10px;
+  letter-spacing: 0.05em;
+  color: #b8c795;
+  text-transform: uppercase;
+  font-weight: 600;
+  margin-top: 2px;
+}
+
+.menu-label {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  color: var(--color-sidebar-muted);
+  text-transform: uppercase;
+  margin-bottom: 12px;
+  padding: 0 8px;
+}
+
+.nav-menu {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.nav-link {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px;
+  border-radius: var(--radius-md);
+  font-size: 0.875rem;
+  font-weight: 600;
+  text-decoration: none;
+  color: var(--color-sidebar-text);
+  transition:
+    background-color 0.2s ease,
+    color 0.2s ease;
+}
+
+.nav-link:hover {
+  background-color: rgba(255, 255, 255, 0.08);
+  color: var(--color-white);
+}
+
+.nav-link.active {
+  background-color: var(--color-active);
+  color: var(--color-active-text);
+}
+
+.nav-link svg {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+}
+
+/* Sidebar Challenge Card Widget */
+.challenge-card {
+  margin-top: 32px;
+  background-color: var(--bg-sidebar-card);
+  border: 1px solid var(--bg-sidebar-card-border);
+  border-radius: var(--radius-lg);
+  padding: 16px;
+  color: var(--color-white);
+}
+
+.challenge-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.challenge-icon {
+  width: 28px;
+  height: 28px;
+  border-radius: var(--radius-sm);
+  background-color: rgba(143, 164, 104, 0.3);
+  color: var(--color-active);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.challenge-icon svg {
+  width: 16px;
+  height: 16px;
+}
+
+.badge-days {
+  font-size: 11px;
+  font-weight: 600;
+  background-color: var(--color-active);
+  color: var(--bg-sidebar);
+  padding: 2px 8px;
+  border-radius: var(--radius-full);
+}
+
+.challenge-card h4 {
+  font-size: 0.75rem;
+  font-weight: 700;
+  line-height: 1.3;
+  margin-bottom: 12px;
+}
+
+.progress-bar-bg {
+  width: 100%;
+  background-color: var(--bg-sidebar-progress);
+  border-radius: var(--radius-full);
+  height: 6px;
+  overflow: hidden;
+}
+
+.progress-bar-fill {
+  background-color: var(--color-active);
+  height: 100%;
+  border-radius: var(--radius-full);
+}
+
+/* User Profile Footer */
+.user-profile-footer {
+  padding-top: 16px;
+  border-top: 1px solid var(--color-sidebar-border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.user-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  overflow: hidden;
+}
+
+.avatar-circle {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background-color: var(--color-active);
+  color: var(--bg-sidebar);
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.75rem;
+  flex-shrink: 0;
+}
+
+.user-details p.user-name {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--color-white);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.user-details p.user-location {
+  font-size: 10px;
+  color: #a6b782;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.btn-icon-options {
+  background: none;
+  border: none;
+  color: #a6b782;
+  cursor: pointer;
+  padding: 4px;
+}
+
+.btn-icon-options:hover {
+  color: var(--color-white);
+}
+
+.btn-icon-options svg {
+  width: 20px;
+  height: 20px;
+}
+
+/* ==========================================================================
+   MAIN CONTENT AREA
+   ========================================================================== */
+.main-content {
+  flex: 1;
+  padding: 32px;
+  overflow-y: auto;
+}
+
+/* Typography Helpers */
+.font-serif-heading {
+  font-family: var(--font-serif);
+}
+
+/* Messages / Alerts */
+.alert-messages {
+  margin-bottom: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.alert {
+  padding: 16px;
+  border-radius: var(--radius-md);
+  font-size: 0.875rem;
+  font-weight: 500;
+  border: 1px solid transparent;
+}
+
+.alert-success {
+  background-color: #f0fdf4;
+  color: #15803d;
+  border-color: #bbf7d0;
+}
+
+.alert-error {
+  background-color: #fef2f2;
+  color: #b91c1c;
+  border-color: #fecaca;
+}

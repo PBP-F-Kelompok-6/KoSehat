@@ -1,0 +1,12 @@
+{% extends 'base.html' %} {% load static %} {% block title %}Katalog Resep -
+KoSehat{% endblock title %} {% block extra_css %}
+<!-- Menghubungkan CSS spesifik milik modul ini -->
+<link rel="stylesheet" href="{% static 'css/habit_tracker.css' %}" />
+{% endblock extra_css %} {% block content %}
+<div class="habit-card">
+  <h2 class="habit-title">
+    Resep masuk akal untuk ruang, waktu, dan dompetmu.
+  </h2>
+  <!-- Konten spesifik modul katalog resep -->
+</div>
+{% endblock content %}

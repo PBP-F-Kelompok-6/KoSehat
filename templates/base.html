@@ -1,0 +1,208 @@
+{% load static %}
+<!doctype html>
+<html lang="id">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>
+      {% block title %}KoSehat - Sustainable Living Tracker{% endblock %}
+    </title>
+
+    <!-- CSS Vanilla Bersama (Variabel :root & Layout Base) -->
+    <link rel="stylesheet" href="{% static 'css/style.css' %}" />
+
+    <!-- Placeholder CSS Spesifik Modul -->
+    {% block extra_css %}{% endblock extra_css %}
+  </head>
+  <body>
+    <div class="app-container">
+      <!-- SIDEBAR NAVIGATION -->
+      <aside class="sidebar">
+        <div class="sidebar-top">
+          <!-- Logo & Brand -->
+          <div class="sidebar-brand">
+            <div class="brand-icon">
+              <svg
+                width="24"
+                height="24"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"
+                ></path>
+              </svg>
+            </div>
+            <div class="brand-text">
+              <h1>KoSehat</h1>
+              <p>UI • HIDUP SEHAT</p>
+            </div>
+          </div>
+
+          <!-- Menu Navigation -->
+          <p class="menu-label">Menu Utama</p>
+
+          <nav class="nav-menu">
+            <!-- Dashboard -->
+            <a
+              href=""
+              class="nav-link {% if request.resolver_match.namespace == 'dashboard' or request.resolver_match.url_name == 'dashboard' %}active{% endif %}"
+            >
+              <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"
+                ></path>
+              </svg>
+              <span>Dashboard</span>
+            </a>
+
+            <!-- Meal Planner -->
+            <a
+              href=""
+              class="nav-link {% if request.resolver_match.namespace == 'meal_planner' or request.resolver_match.url_name == 'meal_planner' %}active{% endif %}"
+            >
+              <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M8 7V3m4 4V3m4 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+                ></path>
+              </svg>
+              <span>Meal Planner</span>
+            </a>
+
+            <!-- Habit Tracker -->
+            <a
+              href=""
+              class="nav-link {% if request.resolver_match.namespace == 'habit_tracker' or request.resolver_match.url_name == 'habit_tracker' %}active{% endif %}"
+            >
+              <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"
+                ></path>
+              </svg>
+              <span>Habit Tracker</span>
+            </a>
+
+            <!-- Impact Analytics -->
+            <a
+              href=""
+              class="nav-link {% if request.resolver_match.namespace == 'impact_analytics' or request.resolver_match.url_name == 'impact_analytics' %}active{% endif %}"
+            >
+              <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"
+                ></path>
+              </svg>
+              <span>Impact Analytics</span>
+            </a>
+
+            <!-- Resep & Edukasi -->
+            <a
+              href=""
+              class="nav-link {% if request.resolver_match.namespace == 'katalog_resep' or request.resolver_match.url_name == 'katalog' %}active{% endif %}"
+            >
+              <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"
+                ></path>
+              </svg>
+              <span>Resep & Edukasi</span>
+            </a>
+          </nav>
+
+          <!-- Challenge Widget -->
+          <div class="challenge-card">
+            <div class="challenge-header">
+              <div class="challenge-icon">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M13 10V3L4 14h7v7l9-11h-7z"
+                  ></path>
+                </svg>
+              </div>
+              <span class="badge-days">5 hari</span>
+            </div>
+            <h4>Tantangan tanpa plastik sekali pakai</h4>
+            <div class="progress-bar-bg">
+              <div class="progress-bar-fill" style="width: 70%"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- User Profile Footer -->
+        <div class="user-profile-footer">
+          <div class="user-info">
+            <div class="avatar-circle">
+              {% if user.is_authenticated %} {{
+              user.first_name|default:user.username|slice:":2"|upper }} {% else
+              %} NA {% endif %}
+            </div>
+            <div class="user-details">
+              <p class="user-name">
+                {% if user.is_authenticated %} {{
+                user.get_full_name|default:user.username }} {% else %} Nadia
+                Aulia {% endif %}
+              </p>
+              <p class="user-location">
+                {% if user.is_authenticated %} {{ user.email }} {% else %}
+                Asrama UI • E-203 {% endif %}
+              </p>
+            </div>
+          </div>
+          <button class="btn-icon-options" aria-label="Opsi Pengguna">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M5 12h.01M12 12h.01M19 12h.01M6 12a1 1 0 11-2 0 1 1 0 012 0zm7 0a1 1 0 11-2 0 1 1 0 012 0zm7 0a1 1 0 11-2 0 1 1 0 012 0z"
+              ></path>
+            </svg>
+          </button>
+        </div>
+      </aside>
+
+      <!-- MAIN CONTENT AREA -->
+      <main class="main-content">
+        <!-- Alert Messages -->
+        {% if messages %}
+        <div class="alert-messages">
+          {% for message in messages %}
+          <div
+            class="alert {% if message.tags == 'error' %}alert-error{% else %}alert-success{% endif %}"
+          >
+            {{ message }}
+          </div>
+          {% endfor %}
+        </div>
+        {% endif %}
+
+        <!-- Inherited Content Block -->
+        {% block content %} {% endblock content %}
+      </main>
+    </div>
+
+    {% block extra_js %}{% endblock extra_js %}
+  </body>
+</html>
