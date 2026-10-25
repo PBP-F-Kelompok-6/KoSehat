@@ -16,10 +16,19 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path
-
-from KoSehat.views import landing_page
+from KoSehat.views import (
+    landing_page,
+    dashboard,
+    impact_analytics,
+)
 
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('', landing_page, name='landing_page'),
+    path('dashboard/', dashboard, name='dashboard'),
+    path(
+        'impact-analytics/',
+        impact_analytics,
+        name='impact_analytics',
+    ),
 ]
