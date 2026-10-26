@@ -5,25 +5,26 @@ from django.contrib.auth.decorators import login_required, user_passes_test
 from django.views.decorators.http import require_POST, require_GET
 from .models import Recipe, EducationArticle, SavedRecipe
 from .forms import RecipeForm, EducationArticleForm
+from .services import fetch_recipes_from_api
 
 def is_admin(user):
     return user.is_staff or user.is_superuser
 
 def recipe_catalog_view(request):
-    recipes = Recipe.objects.all().order_by('-created_at')
-    editor_choice = Recipe.objects.filter(is_editor_choice=True).first()
-    articles = EducationArticle.objects.all().order_by('-created_at')[:3]
+    # Panggil Public API secara live
+    api_recipes = fetch_recipes_from_api(number=12)
     
-    saved_recipe_ids = []
-    if request.user.is_authenticated:
-        saved_recipe_ids = list(SavedRecipe.objects.filter(user=request.user).values_list('recipe_id', flat=True))
+    # Pisahkan item pertama sebagai Pilihan Editor (Featured Card)
+    editor_choice = api_recipes[0] if api_recipes else None
+    display_recipes = api_recipes[1:7] if len(api_recipes) > 1 else api_recipes
+
+    articles = EducationArticle.objects.all().order_by('-created_at')[:3]
 
     context = {
-        'recipes': recipes,
+        'recipes': display_recipes,
         'editor_choice': editor_choice,
         'articles': articles,
-        'saved_recipe_ids': saved_recipe_ids,
-        'is_admin': is_admin(request.user) if request.user.is_authenticated else False,
+        'total_recipes': len(api_recipes),
     }
     return render(request, 'recipe_catalog.html', context)
 
@@ -34,34 +35,16 @@ def recipe_filter_ajax(request):
     max_cost = request.GET.get('max_cost', None)
     max_time = request.GET.get('max_time', None)
 
-    recipes = Recipe.objects.all()
+    # Fetch data resep langsung dari Public API secara real-time berdasarkan query pengguna
+    recipes = fetch_recipes_from_api(
+        query=search_query,
+        tag=tag_filter,
+        max_ready_time=max_time,
+        max_price=max_cost,
+        number=12
+    )
 
-    if search_query:
-        recipes = recipes.filter(title__icontains=search_query)
-    if tag_filter and tag_filter != 'Semua':
-        if tag_filter == 'Plant-based':
-            recipes = recipes.filter(is_plant_based=True)
-        else:
-            recipes = recipes.filter(tag=tag_filter)
-    if max_cost:
-        recipes = recipes.filter(estimated_cost__lte=float(max_cost))
-    if max_time:
-        recipes = recipes.filter(prep_time_minutes__lte=int(max_time))
-
-    data = [
-        {
-            'id': r.id,
-            'title': r.title,
-            'description': r.description,
-            'image_url': r.image_url or 'https://via.placeholder.com/300x200',
-            'prep_time_minutes': r.prep_time_minutes,
-            'estimated_cost': f"Rp{r.estimated_cost:,.0f}".replace(',', '.'),
-            'protein_grams': r.protein_grams,
-            'tag': r.tag,
-        }
-        for r in recipes
-    ]
-    return JsonResponse({'status': 'success', 'recipes': data})
+    return JsonResponse({'status': 'success', 'recipes': recipes})
 
 @login_required
 @user_passes_test(is_admin)

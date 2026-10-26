@@ -189,5 +189,30 @@ KoSehat{% endblock title %} {% block extra_css %}
       });
     });
   });
+
+  function renderRecipes(recipes) {
+    if (recipes.length === 0) {
+      recipeGrid.innerHTML =
+        '<p style="grid-column: span 3;">Tidak ada resep yang sesuai dari Spoonacular API.</p>';
+      return;
+    }
+    recipeGrid.innerHTML = recipes
+      .slice(0, 6)
+      .map(
+        (r) => `
+    <div class="card-recipe">
+      <img src="${r.image_url}" alt="${r.title}" class="card-recipe-img" />
+      <div class="card-recipe-body">
+        <span class="tag-badge">${r.tag}</span>
+        <h3>${r.title}</h3>
+        <div class="card-recipe-meta">
+          🕒 ${r.prep_time_minutes} menit • ${r.estimated_cost_formatted} • ${r.protein_grams} g protein
+        </div>
+      </div>
+    </div>
+  `,
+      )
+      .join("");
+  }
 </script>
 {% endblock extra_js %}
