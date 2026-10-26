@@ -1,12 +1,193 @@
 {% extends 'base.html' %} {% load static %} {% block title %}Katalog Resep -
 KoSehat{% endblock title %} {% block extra_css %}
-<!-- Menghubungkan CSS spesifik milik modul ini -->
 <link rel="stylesheet" href="{% static 'css/recipe_catalog.css' %}" />
 {% endblock extra_css %} {% block content %}
-<div class="recipe-card">
-  <h2 class="recipe-title">
-    Resep masuk akal untuk ruang, waktu, dan dompetmu.
-  </h2>
-  <!-- Konten spesifik modul katalog resep -->
+<div class="catalog-layout">
+  <!-- Konten Utama -->
+  <div class="catalog-main">
+    <div class="catalog-header">
+      <p class="section-tagline">Dapur Kos Pintar</p>
+      <h1>Resep masuk akal untuk ruang, waktu, dan dompetmu.</h1>
+      <p>
+        Temukan resep bergizi, minim alat, dan edukasi praktis yang bisa
+        langsung diterapkan.
+      </p>
+
+      <!-- Input Pencarian -->
+      <div class="search-box-container">
+        <div class="search-input-group">
+          <svg
+            width="20"
+            height="20"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+            ></path>
+          </svg>
+          <input
+            type="text"
+            id="recipeSearchInput"
+            placeholder="Cari resep, bahan, atau topik edukasi..."
+          />
+        </div>
+        <span class="kbd-shortcut">⌘ K</span>
+      </div>
+
+      <!-- Filter Tags -->
+      <div class="filter-pills">
+        <button class="pill-btn active" data-tag="Semua">Semua</button>
+        <button class="pill-btn" data-cost="15000">≤ Rp15.000</button>
+        <button class="pill-btn" data-time="20">≤ 20 menit</button>
+        <button class="pill-btn" data-tag="Tinggi protein">
+          Tinggi protein
+        </button>
+        <button class="pill-btn" data-tag="Plant-based">Plant-based</button>
+        <button class="pill-btn" data-tag="Minim alat">Tanpa kulkas</button>
+      </div>
+    </div>
+
+    <!-- Pilihan Editor Banner -->
+    {% if editor_choice %}
+    <div class="featured-card">
+      <img
+        src="{{ editor_choice.image_url|default:'https://via.placeholder.com/400x250' }}"
+        alt="Featured"
+        class="featured-img"
+      />
+      <div class="featured-content">
+        <span class="badge-editor">Pilihan editor</span>
+        <h3>{{ editor_choice.title }}</h3>
+        <p>{{ editor_choice.description|truncatewords:20 }}</p>
+        <div class="recipe-meta">
+          🕒 {{ editor_choice.prep_time_minutes }} menit baca • 🔖 1.284
+          disimpan
+        </div>
+      </div>
+    </div>
+    {% endif %}
+
+    <!-- Daftar Resep Grid -->
+    <div class="recipe-section-title">
+      <h3>Resep untukmu</h3>
+      <span style="font-size: 0.85rem; color: var(--color-text-muted)"
+        >{{ recipes|length }} resep tersedia</span
+      >
+    </div>
+
+    <div class="recipe-grid" id="recipeGrid">
+      {% for recipe in recipes %}
+      <div class="card-recipe">
+        <img
+          src="{{ recipe.image_url|default:'https://via.placeholder.com/300x200' }}"
+          alt="{{ recipe.title }}"
+        />
+        <div class="card-recipe-body">
+          <span class="tag-badge">{{ recipe.tag }}</span>
+          <h4>{{ recipe.title }}</h4>
+          <p class="recipe-meta">
+            🕒 {{ recipe.prep_time_minutes }} menit • Rp{{
+            recipe.estimated_cost|floatformat:0 }} • {{ recipe.protein_grams }}g
+            protein
+          </p>
+        </div>
+      </div>
+      {% empty %}
+      <p>Belum ada resep yang ditemukan.</p>
+      {% endfor %}
+    </div>
+  </div>
+
+  <!-- Sidebar Kanan (Belajar 5 Menit) -->
+  <div class="catalog-sidebar">
+    <div class="widget-education">
+      <div class="widget-title-row">
+        <h4>Belajar 5 menit</h4>
+        <span style="font-size: 1.2rem">📖</span>
+      </div>
+      <p
+        style="
+          font-size: 0.75rem;
+          color: var(--color-text-muted);
+          margin-bottom: 12px;
+        "
+      >
+        Pilihan minggu ini
+      </p>
+
+      {% for article in articles %}
+      <div class="article-item">
+        <h5>{{ article.title }}</h5>
+        <p class="article-meta">
+          🕒 {{ article.read_time_minutes }} menit • {{ article.category }}
+        </p>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
 </div>
-{% endblock content %}
+{% endblock content %} {% block extra_js %}
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    const searchInput = document.getElementById("recipeSearchInput");
+    const recipeGrid = document.getElementById("recipeGrid");
+    const filterBtns = document.querySelectorAll(".pill-btn");
+
+    function fetchFilteredRecipes(query = "", tag = "") {
+      const url = `{% url 'recipe_catalog:filter_ajax' %}?q=${encodeURIComponent(query)}&tag=${encodeURIComponent(tag)}`;
+      fetch(url)
+        .then((res) => res.json())
+        .then((data) => {
+          if (data.status === "success") {
+            renderRecipes(data.recipes);
+          }
+        });
+    }
+
+    function renderRecipes(recipes) {
+      if (recipes.length === 0) {
+        recipeGrid.innerHTML = "<p>Tidak ada resep yang sesuai kriteria.</p>";
+        return;
+      }
+      recipeGrid.innerHTML = recipes
+        .map(
+          (r) => `
+      <div class="card-recipe">
+        <img src="${r.image_url}" alt="${r.title}" />
+        <div class="card-recipe-body">
+          <span class="tag-badge">${r.tag}</span>
+          <h4>${r.title}</h4>
+          <p class="recipe-meta">🕒 ${r.prep_time_minutes} menit • ${r.estimated_cost} • ${r.protein_grams}g protein</p>
+        </div>
+      </div>
+    `,
+        )
+        .join("");
+    }
+
+    // Event Listener Pencarian (Debounce)
+    let timeout = null;
+    searchInput.addEventListener("input", function () {
+      clearTimeout(timeout);
+      timeout = setTimeout(() => {
+        fetchFilteredRecipes(searchInput.value);
+      }, 300);
+    });
+
+    // Event Listener Tag Filters
+    filterBtns.forEach((btn) => {
+      btn.addEventListener("click", function () {
+        filterBtns.forEach((b) => b.classList.remove("active"));
+        this.classList.add("active");
+        const tag = this.dataset.tag || "";
+        fetchFilteredRecipes(searchInput.value, tag);
+      });
+    });
+  });
+</script>
+{% endblock extra_js %}
