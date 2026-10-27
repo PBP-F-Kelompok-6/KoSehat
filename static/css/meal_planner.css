@@ -66,3 +66,20 @@
   border-radius: var(--radius-full);
   background: var(--color-active); color: var(--bg-sidebar);
 }
+
+
+/* Tombol hapus */
+.mp-link-danger { background: none; border: 0; color: #b91c1c; cursor: pointer; font: inherit; font-size: 0.8125rem; margin-top: 6px; padding: 0; }
+
+/* Form tambah menu */
+.mp-form { max-width: 520px; }
+.mp-field { display: flex; flex-direction: column; gap: 4px; margin-bottom: 14px; }
+.mp-field label { font-size: 0.8125rem; font-weight: 600; }
+.mp-field input, .mp-field select, .mp-field textarea {
+  padding: 10px 12px; border: 1px solid #d8d6c4; border-radius: var(--radius-sm);
+  font: inherit; background: var(--color-white);
+}
+.mp-field-check { flex-direction: row; align-items: center; gap: 8px; }
+.mp-field-check input { width: auto; }
+.mp-error { color: #b91c1c; }
+.mp-form-actions { display: flex; gap: 8px; }

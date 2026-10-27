@@ -1,0 +1,31 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}Tambah Menu - KoSehat{% endblock title %}
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/meal_planner.css' %}" />
+{% endblock extra_css %}
+
+{% block content %}
+<div class="mp-page">
+  <h2 class="font-serif-heading mp-title">Tambah Menu</h2>
+
+  <form method="post" class="mp-card mp-form">
+    {% csrf_token %}
+    {% for field in form %}
+    <div class="mp-field {% if field.field.widget.input_type == 'checkbox' %}mp-field-check{% endif %}">
+      {% if field.field.widget.input_type == 'checkbox' %}
+      {{ field }}<label for="{{ field.id_for_label }}">{{ field.label }}</label>
+      {% else %}
+      <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+      {{ field }}
+      {% endif %}
+      {% for error in field.errors %}<small class="mp-error">{{ error }}</small>{% endfor %}
+    </div>
+    {% endfor %}
+    <div class="mp-form-actions">
+      <button type="submit" class="mp-btn">Simpan</button>
+      <a href="{% url 'meal_planner:index' %}" class="mp-btn mp-btn-light">Batal</a>
+    </div>
+  </form>
+</div>
+{% endblock content %}

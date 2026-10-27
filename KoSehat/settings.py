@@ -111,7 +111,8 @@ AUTH_PASSWORD_VALIDATORS = [
 
 LANGUAGE_CODE = 'en-us'
 
-TIME_ZONE = 'UTC'
+LOGIN_URL = '/admin/login/'     # tambah
+TIME_ZONE = 'Asia/Jakarta'      # ganti dari 'UTC'
 
 USE_I18N = True
 
