@@ -205,6 +205,7 @@ Edukasi - KoSehat{% endblock title %} {% block extra_css %}
     </div>
   </div>
 </div>
-{% endblock content %} {% block extra_js %}
+{% include 'recipe_catalog_modal.html' %} {% endblock content %} {% block
+extra_js %}
 <script src="{% static 'js/recipe_catalog.js' %}"></script>
 {% endblock extra_js %}
