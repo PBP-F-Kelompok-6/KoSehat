@@ -1,5 +1,6 @@
 import requests
 from django.conf import settings
+from .models import Recipe
 
 SPOONACULAR_API_KEY = getattr(settings, 'SPOONACULAR_API_KEY', '')
 BASE_URL = 'https://api.spoonacular.com/recipes/complexSearch'
@@ -106,3 +107,65 @@ def parse_spoonacular_data(raw_recipes, max_price=None):
         })
         
     return parsed_recipes
+
+def upsert_recipes_to_db(parsed_recipes):
+    """
+    Melakukan upsert data hasil fetch API ke database lokal secara aman.
+    """
+    saved_instances = []
+    for item in parsed_recipes:
+        recipe_obj, _ = Recipe.objects.update_or_create(
+            external_api_id=item['external_api_id'],
+            defaults={
+                'title': item['title'],
+                'description': item['description'],
+                'image_url': item['image_url'],
+                'prep_time_minutes': item['prep_time_minutes'],
+                'estimated_cost': item['estimated_cost'],
+                'protein_grams': item['protein_grams'],
+                'is_plant_based': item['is_plant_based'],
+                'tag': item['tag'],
+                'ingredients': item['ingredients'],
+                'equipments': item['equipments'],
+                'instructions': item['instructions'],
+            }
+        )
+        saved_instances.append(recipe_obj)
+    return saved_instances
+
+def get_or_fetch_recipes(query='', tag='', max_ready_time=None, max_price=None, number=12):
+    """
+    Implementasi Cache-Aside Pattern: Cek DB lokal terlebih dahulu.
+    Jika tidak mencukupi, panggil API lalu simpan hasilnya ke DB.
+    """
+    qs = Recipe.objects.all()
+
+    if query:
+        qs = qs.filter(title__icontains=query)
+    if tag:
+        qs = qs.filter(tag=tag)
+    if max_ready_time:
+        qs = qs.filter(prep_time_minutes__lte=max_ready_time)
+    if max_price:
+        qs = qs.filter(estimated_cost__lte=max_price)
+
+    # Ambang batas hit (Cache Hit)
+    if qs.count() >= 6:
+        return list(qs[:number])
+
+    # Cache Miss: Panggil API dan lakukan upsert ke DB lokal
+    api_data = fetch_recipes_from_api(
+        query=query, 
+        tag=tag, 
+        max_ready_time=max_ready_time, 
+        max_price=max_price, 
+        number=number
+    )
+    
+    if api_data:
+        upsert_recipes_to_db(api_data)
+        # Re-query DB agar mengembalikan instance ORM resmi
+        return list(qs[:number])
+
+    # Fallback jika API gagal/rate-limited: kembalikan apa yang ada di DB lokal
+    return list(qs[:number])

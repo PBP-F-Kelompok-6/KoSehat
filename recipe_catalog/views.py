@@ -5,26 +5,23 @@ from django.contrib.auth.decorators import login_required, user_passes_test
 from django.views.decorators.http import require_POST, require_GET
 from .models import Recipe, EducationArticle, SavedRecipe
 from .forms import RecipeForm, EducationArticleForm
-from .services import fetch_recipes_from_api
+from .services import get_or_fetch_recipes
 
 def is_admin(user):
     return user.is_staff or user.is_superuser
 
 def recipe_catalog_view(request):
-    # Panggil Public API secara live
-    api_recipes = fetch_recipes_from_api(number=12)
+    recipes = get_or_fetch_recipes(number=12)
     
-    # Pisahkan item pertama sebagai Pilihan Editor (Featured Card)
-    editor_choice = api_recipes[0] if api_recipes else None
-    display_recipes = api_recipes[1:7] if len(api_recipes) > 1 else api_recipes
-
+    editor_choice = recipes[0] if recipes else None
+    display_recipes = recipes[1:7] if len(recipes) > 1 else recipes
     articles = EducationArticle.objects.all().order_by('-created_at')[:3]
 
     context = {
         'recipes': display_recipes,
         'editor_choice': editor_choice,
         'articles': articles,
-        'total_recipes': len(api_recipes),
+        'total_recipes': len(recipes),
     }
     return render(request, 'recipe_catalog.html', context)
 
@@ -35,16 +32,31 @@ def recipe_filter_ajax(request):
     max_cost = request.GET.get('max_cost', None)
     max_time = request.GET.get('max_time', None)
 
-    # Fetch data resep langsung dari Public API secara real-time berdasarkan query pengguna
-    recipes = fetch_recipes_from_api(
+    recipes = get_or_fetch_recipes(
         query=search_query,
         tag=tag_filter,
         max_ready_time=max_time,
         max_price=max_cost,
         number=12
     )
+    
+    recipes_data = [
+        {
+            'id': r.id,
+            'external_api_id': r.external_api_id,
+            'title': r.title,
+            'description': r.description,
+            'image_url': r.image_url,
+            'prep_time_minutes': r.prep_time_minutes,
+            'estimated_cost': float(r.estimated_cost),
+            'estimated_cost_formatted': f"Rp{r.estimated_cost:,.0f}".replace(',', '.'),
+            'protein_grams': r.protein_grams,
+            'tag': r.tag,
+        }
+        for r in recipes
+    ]
 
-    return JsonResponse({'status': 'success', 'recipes': recipes})
+    return JsonResponse({'status': 'success', 'recipes': recipes_data})
 
 @login_required
 @user_passes_test(is_admin)
@@ -71,7 +83,7 @@ def recipe_delete_view(request, recipe_id):
 @require_POST
 def toggle_save_recipe(request, recipe_id):
     recipe = get_object_or_404(Recipe, pk=recipe_id)
-    saved, created = SavedRecipe.objects.get_or_dict_or_create(user=request.user, recipe=recipe) if hasattr(SavedRecipe.objects, 'get_or_dict_or_create') else SavedRecipe.objects.get_or_create(user=request.user, recipe=recipe)
+    saved, created = SavedRecipe.objects.get_or_create(user=request.user, recipe=recipe)
     
     if not created:
         saved.delete()
