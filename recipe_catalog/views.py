@@ -100,3 +100,28 @@ def recipe_detail_view(request, recipe_id):
         'instructions': recipe.instructions,
     }
     return render(request, 'recipe_detail.html', context)
+
+@require_GET
+def recipe_detail_api(request, recipe_id):
+    """
+    Endpoint AJAX untuk mengembalikan data detail resep secara lengkap
+    (termasuk ingredients, equipments, dan instructions) dalam format JSON.
+    """
+    recipe = get_object_or_404(Recipe, pk=recipe_id)
+    
+    return JsonResponse({
+        'status': 'success',
+        'recipe': {
+            'id': recipe.id,
+            'title': recipe.title,
+            'description': recipe.description,
+            'image_url': recipe.image_url or '/static/images/placeholder-recipe.jpg',
+            'prep_time_minutes': recipe.prep_time_minutes,
+            'estimated_cost_formatted': f"Rp{recipe.estimated_cost:,.0f}".replace(',', '.'),
+            'protein_grams': recipe.protein_grams,
+            'tag': recipe.tag,
+            'ingredients': recipe.ingredients,
+            'equipments': recipe.equipments,
+            'instructions': recipe.instructions,
+        }
+    })
