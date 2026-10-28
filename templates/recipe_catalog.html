@@ -130,7 +130,10 @@ Edukasi - KoSehat{% endblock title %} {% block extra_css %}
       <!-- Grid Resep -->
       <div class="recipe-cards-grid" id="recipeGrid">
         {% for recipe in recipes|slice:":6" %}
-        <div class="recipe-card-item">
+        <div
+          class="recipe-card-item {% if recipe.is_bookmarked %}bookmarked{% endif %}"
+          data-recipe-id="{{ recipe.id }}"
+        >
           <img
             src="{{ recipe.image_url }}"
             alt="{{ recipe.title }}"
@@ -205,7 +208,9 @@ Edukasi - KoSehat{% endblock title %} {% block extra_css %}
     </div>
   </div>
 </div>
-{% include 'recipe_catalog_modal.html' %} {% endblock content %} {% block
-extra_js %}
+{% include 'recipe_detail_modal.html' %} {% endblock content %}
+
+<!-- prettier-ignore -->
+{% block extra_js %}
 <script src="{% static 'js/recipe_catalog.js' %}"></script>
 {% endblock extra_js %}
