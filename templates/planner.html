@@ -27,13 +27,13 @@
       <span class="mp-stat-label">Total biaya</span>
       <span class="mp-stat-value">Rp {{ week_cost|floatformat:"0g" }}</span>
     </div>
-    <div class="mp-card">
+    <div class="mp-card mp-card-eco">
       <span class="mp-stat-label">Masak sendiri</span>
       <span class="mp-stat-value">{{ week_homemade_count }}</span>
     </div>
-    <div class="mp-card mp-card-eco">
-      <span class="mp-stat-label">Kemasan dihindari</span>
-      <span class="mp-stat-value">{{ week_packaging_avoided }}</span>
+    <div class="mp-card">
+      <span class="mp-stat-label">Kemasan sekali pakai</span>
+      <span class="mp-stat-value">{{ week_packaging_used }}</span>
     </div>
   </div>
 
@@ -56,16 +56,20 @@
         <small class="mp-muted">
           Rp {{ meal.estimated_cost|floatformat:"0g" }}{% if meal.calories %} &bull; {{ meal.calories }} kkal{% endif %}
         </small>
-        {% if meal.is_homemade or meal.packaging_avoided %}
+        {% if meal.is_homemade or meal.packaging_used %}
         <div class="mp-badges">
           {% if meal.is_homemade %}<span class="mp-badge">Masak sendiri</span>{% endif %}
-          {% if meal.packaging_avoided %}<span class="mp-badge">{{ meal.packaging_avoided }} kemasan dihindari</span>{% endif %}
+          {% if meal.packaging_used %}<span class="mp-badge mp-badge-muted">{{ meal.packaging_used }} kemasan sekali pakai</span>{% endif %}
         </div>
         {% endif %}
-        <form method="post" action="{% url 'meal_planner:meal_delete' meal.pk %}" onsubmit="return confirm('Hapus menu ini?');">
-          {% csrf_token %}
-          <button type="submit" class="mp-link-danger">Hapus</button>
-        </form>
+        {% if meal.notes %}<p class="mp-meal-note">{{ meal.notes }}</p>{% endif %}
+        <div class="mp-meal-actions">
+          <a class="mp-link-edit" href="{% url 'meal_planner:meal_update' meal.pk %}">Ubah</a>
+          <form method="post" action="{% url 'meal_planner:meal_delete' meal.pk %}" onsubmit="return confirm('Hapus menu ini?');">
+            {% csrf_token %}
+            <button type="submit" class="mp-link-danger">Hapus</button>
+          </form>
+        </div>
       </div>
       {% empty %}
       <p class="mp-muted mp-empty">Belum ada menu.</p>

@@ -1,17 +1,20 @@
 from datetime import date, timedelta
-from django.http import JsonResponse
+
 from django.contrib import messages
 from django.contrib.auth import get_user_model
+from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.utils import timezone
 from django.views.decorators.http import require_POST
+
 from . import nutrition
 from .forms import MealForm
 from .models import Meal
 
 HARI = ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu', 'Minggu']
 # Urutan tampil dalam sehari: sarapan -> siang -> malam -> camilan
+# (.get(..., 99) jaga-jaga kalau ada tipe yang nggak dikenal, supaya halaman nggak error)
 MEAL_ORDER = {value: i for i, (value, _) in enumerate(Meal.MealType.choices)}
 
 
@@ -53,7 +56,7 @@ def planner(request):
     days = []
     for i in range(7):
         d = start + timedelta(days=i)
-        day_meals = sorted(by_date.get(d, []), key=lambda m: MEAL_ORDER[m.meal_type])
+        day_meals = sorted(by_date.get(d, []), key=lambda m: MEAL_ORDER.get(m.meal_type, 99))
         days.append({
             'date': d,
             'label': HARI[i],
@@ -71,7 +74,7 @@ def planner(request):
         'week_cost': sum(m.estimated_cost for m in meals),
         'week_meal_count': len(meals),
         'week_homemade_count': sum(1 for m in meals if m.is_homemade),
-        'week_packaging_avoided': sum(m.packaging_avoided for m in meals),
+        'week_packaging_used': sum(m.packaging_used for m in meals),
     })
 
 
@@ -84,7 +87,18 @@ def meal_create(request):
         meal.save()
         messages.success(request, 'Menu berhasil ditambahkan.')
         return redirect(_planner_url(meal.date))
-    return render(request, 'meal_form.html', {'form': form})
+    return render(request, 'meal_form.html', {'form': form, 'title': 'Tambah Menu'})
+
+
+def meal_update(request, pk):
+    # filter user: user cuma bisa mengubah menu miliknya sendiri
+    meal = get_object_or_404(Meal, pk=pk, user=_user(request))
+    form = MealForm(request.POST or None, instance=meal)
+    if request.method == 'POST' and form.is_valid():
+        form.save()
+        messages.success(request, 'Menu berhasil diperbarui.')
+        return redirect(_planner_url(meal.date))
+    return render(request, 'meal_form.html', {'form': form, 'title': 'Ubah Menu'})
 
 
 @require_POST

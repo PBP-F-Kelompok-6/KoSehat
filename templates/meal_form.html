@@ -1,13 +1,13 @@
 {% extends 'base.html' %}
 {% load static %}
-{% block title %}Tambah Menu - KoSehat{% endblock title %}
+{% block title %}{{ title|default:'Menu' }} - KoSehat{% endblock title %}
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'css/meal_planner.css' %}" />
 {% endblock extra_css %}
 
 {% block content %}
 <div class="mp-page">
-  <h2 class="font-serif-heading mp-title">Tambah Menu</h2>
+  <h2 class="font-serif-heading mp-title">{{ title|default:"Menu" }}</h2>
 
   <form method="post" class="mp-card mp-form">
     {% csrf_token %}
@@ -21,14 +21,16 @@
       {% endif %}
       {% for error in field.errors %}<small class="mp-error">{{ error }}</small>{% endfor %}
     </div>
-    {% endfor %}
-
+    {% if field.name == 'calories' %}
     <div class="mp-field">
-      <label for="ingredients-input">Hitung kalori otomatis (opsional)</label>
-      <textarea id="ingredients-input" rows="3" placeholder="Satu bahan per baris: nama (bahasa Inggris), gram&#10;white rice cooked, 150&#10;egg, 50"></textarea>
+      <label for="ingredients-input">Hitung kalori otomatis</label>
+      <textarea id="ingredients-input" rows="3" placeholder="Satu bahan per baris: nama (bahasa Inggris), gram&#10;cooked white rice, 150&#10;egg, 50"></textarea>
+      <small class="mp-muted">Isi dalam gram, bukan butir (contoh: 1 butir telur &asymp; 50 g, 1 centong nasi &asymp; 100 g).</small>
       <button type="button" id="calc-kcal" class="mp-btn mp-btn-light" style="align-self: flex-start">Hitung kalori</button>
       <small id="calc-result" class="mp-muted"></small>
     </div>
+    {% endif %}
+    {% endfor %}
 
     <div class="mp-form-actions">
       <button type="submit" class="mp-btn">Simpan</button>
@@ -52,7 +54,7 @@
       const data = await res.json();
       if (!res.ok) { result.textContent = data.error; return; }
       document.getElementById('id_calories').value = data.kcal;
-      result.textContent = data.items.map(i => i.name + ' ' + i.grams + ' g = ' + i.kcal + ' kkal').join(' | ')
+      result.textContent = data.items.map(i => i.name + ' (' + i.per_100g + ' kkal/100 g) x ' + i.grams + ' g = ' + i.kcal + ' kkal').join(' | ')
         + ' -> total ' + data.kcal + ' kkal (perkiraan, boleh diubah)';
     } catch (e) {
       result.textContent = 'Gagal menghubungi server.';

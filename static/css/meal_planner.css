@@ -83,3 +83,28 @@
 .mp-field-check input { width: auto; }
 .mp-error { color: #b91c1c; }
 .mp-form-actions { display: flex; gap: 8px; }
+
+/* Aksi ubah / hapus di tiap menu: ukuran & tinggi baris disamakan supaya sejajar */
+.mp-meal-actions { display: flex; align-items: baseline; gap: 12px; margin-top: 6px; }
+.mp-meal-actions form { margin: 0; }
+.mp-link-edit,
+.mp-meal-actions .mp-link-danger {
+  font: inherit;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  line-height: 1.4;
+  margin: 0;
+  padding: 0;
+}
+.mp-link-edit { color: var(--bg-sidebar); text-decoration: none; }
+.mp-link-edit:hover { text-decoration: underline; }
+
+/* Badge netral untuk kemasan sekali pakai */
+.mp-badge-muted { background: #eceadb; color: var(--color-text-muted); }
+
+/* Catatan menu */
+.mp-meal-note {
+  margin-top: 6px; font-size: 0.8125rem; font-style: italic;
+  color: var(--color-text-muted);
+  white-space: pre-line; overflow-wrap: anywhere;
+}

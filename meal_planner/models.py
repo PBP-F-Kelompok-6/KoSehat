@@ -30,8 +30,8 @@ class Meal(models.Model):
     is_homemade = models.BooleanField(
         default=False, help_text='Masak sendiri, bukan makanan cepat saji'
     )
-    packaging_avoided = models.PositiveSmallIntegerField(
-        default=0, help_text='Jumlah kemasan sekali pakai yang dihindari'
+    packaging_used = models.PositiveSmallIntegerField(
+        default=0, help_text='Jumlah kemasan sekali pakai yang dipakai untuk menu ini'
     )
     notes = models.TextField(blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
