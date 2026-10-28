@@ -1,7 +1,13 @@
 {% load static %}
 
 <!-- Modal Detail Resep -->
-<div id="recipeDetailModal" class="modal-overlay" aria-hidden="true">
+<div
+  id="recipeDetailModal"
+  class="modal-overlay"
+  aria-hidden="true"
+  data-detail-url="{% url 'recipe_catalog:recipe_detail_api' 0 %}"
+  data-bookmark-url="{% url 'recipe_catalog:toggle_bookmark' 0 %}"
+>
   <div class="modal-card recipe-detail-card" role="dialog" aria-modal="true">
     <!-- Header Modal & Close Button -->
     <button
