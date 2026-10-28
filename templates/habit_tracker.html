@@ -1,12 +1,135 @@
-{% extends 'base.html' %} {% load static %} {% block title %}Tracker Kesehatan -
-KoSehat{% endblock title %} {% block extra_css %}
-<!-- Menghubungkan CSS spesifik milik modul ini -->
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Tracker Kesehatan - KoSehat{% endblock title %}
+
+{% block extra_css %}
 <link rel="stylesheet" href="{% static 'css/habit_tracker.css' %}" />
-{% endblock extra_css %} {% block content %}
-<div class="habit-card">
-  <h2 class="habit-title">
-    Tracker Kesehatan untuk mengatur pola hidup sehat.
-  </h2>
-  <!-- Konten spesifik modul tracker kesehatan -->
+{% endblock extra_css %}
+
+{% block content %}
+<div class="habit-tracker-container">
+  <!-- Header -->
+  <header class="tracker-header">
+    <div class="tracker-title-group">
+      <p class="menu-label">TRACKER KESEHATAN</p>
+      <h2 class="font-serif-heading">Kenali pola yang bikin badanmu terasa lebih enak.</h2>
+      <p class="tracker-subtitle">Catat kebiasaan sederhana dan lihat hubungan antara tidur, hidrasi, serta energi harian.</p>
+    </div>
+    <div class="header-actions">
+      <button class="btn-primary" id="btn-open-modal">
+        <span>+</span> Tambah kebiasaan
+      </button>
+    </div>
+  </header>
+
+  <!-- Day Selector -->
+  <div class="day-selector-strip">
+    <div class="day-card"><div class="day-name">Sen</div><div class="day-num">28</div></div>
+    <div class="day-card"><div class="day-name">Sel</div><div class="day-num">29</div></div>
+    <div class="day-card active"><div class="day-name">Rab</div><div class="day-num">30</div></div>
+    <div class="day-card"><div class="day-name">Kam</div><div class="day-num">01</div></div>
+    <div class="day-card"><div class="day-name">Jum</div><div class="day-num">02</div></div>
+    <div class="day-card"><div class="day-name">Sab</div><div class="day-num">03</div></div>
+    <div class="day-card"><div class="day-name">Min</div><div class="day-num">04</div></div>
+  </div>
+
+  <!-- KPI Cards -->
+  <div class="kpi-grid">
+    <div class="kpi-card">
+      <div class="kpi-label">Streak aktif</div>
+      <div class="kpi-val" id="kpi-streak">6 hari</div>
+      <div class="kpi-sub">Rekor terbaik: 12 hari</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">Kebiasaan selesai</div>
+      <div class="kpi-val" id="kpi-completed">5 / 7</div>
+      <div class="kpi-sub" id="kpi-remaining">2 target belum selesai</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">Energi pagi</div>
+      <div class="kpi-val">8 / 10</div>
+      <div class="kpi-sub">Lebih baik dari kemarin</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">Waktu fokus</div>
+      <div class="kpi-val">3j 15m</div>
+      <div class="kpi-sub">2 sesi tanpa distraksi</div>
+    </div>
+  </div>
+
+  <!-- Main Body Grid -->
+  <div class="tracker-body-grid">
+    <!-- Left: Habit Checklist -->
+    <div class="habit-section-card">
+      <h3>Kebiasaan hari ini</h3>
+      <div class="progress-bar-bg" style="margin: 16px 0;">
+        <div class="progress-bar-fill" id="habit-progress-bar" style="width: 71%;"></div>
+      </div>
+      <div id="habit-list-container">
+        <!-- Dinamis dimuat via JavaScript AJAX -->
+      </div>
+    </div>
+
+    <!-- Right: Health Widgets -->
+    <div class="side-widgets-column">
+      <div class="side-widget-card">
+        <h4>Kualitas tidur</h4>
+        <p class="kpi-val" style="margin-top: 8px;">7j 24m</p>
+        <p class="kpi-sub">Target 7.5 jam tercapai</p>
+      </div>
+
+      <div class="side-widget-card">
+        <h4>Hidrasi Harian</h4>
+        <p class="kpi-val" style="margin-top: 8px;">1.500 ml</p>
+        <p class="kpi-sub">Sisa 500 ml lagi</p>
+      </div>
+    </div>
+  </div>
 </div>
+
+<!-- Modal Form Add Habit -->
+<div class="modal-overlay" id="habit-modal">
+  <div class="modal-box">
+    <h3>Tambah Kebiasaan Baru</h3>
+    <form id="form-add-habit" style="margin-top: 16px;">
+      {% csrf_token %}
+      <div style="margin-bottom: 12px;">
+        <label style="font-size: 0.8rem; font-weight: 600;">Judul Kebiasaan</label>
+        <input type="text" name="title" required style="width: 100%; padding: 8px; border-radius: 8px; border: 1px solid #ccc; margin-top: 4px;">
+      </div>
+      <div style="margin-bottom: 12px;">
+        <label style="font-size: 0.8rem; font-weight: 600;">Kategori</label>
+        <select name="category" style="width: 100%; padding: 8px; border-radius: 8px; border: 1px solid #ccc; margin-top: 4px;">
+          <option value="water">Hidrasi</option>
+          <option value="food">Pola Makan</option>
+          <option value="exercise">Olahraga</option>
+          <option value="sleep">Kualitas Tidur</option>
+          <option value="mindfulness">Eco-Mindfulness</option>
+        </select>
+      </div>
+      <div style="display: flex; gap: 12px; margin-bottom: 20px;">
+        <div style="flex: 1;">
+          <label style="font-size: 0.8rem; font-weight: 600;">Target</label>
+          <input type="number" name="target_value" value="1" required style="width: 100%; padding: 8px; border-radius: 8px; border: 1px solid #ccc; margin-top: 4px;">
+        </div>
+        <div style="flex: 1;">
+          <label style="font-size: 0.8rem; font-weight: 600;">Satuan</label>
+          <input type="text" name="unit" value="kali" required style="width: 100%; padding: 8px; border-radius: 8px; border: 1px solid #ccc; margin-top: 4px;">
+        </div>
+      </div>
+      <div style="display: flex; justify-content: flex-end; gap: 8px;">
+        <button type="button" id="btn-close-modal" style="padding: 8px 16px; border: none; background: #e5e7eb; border-radius: 8px; cursor: pointer;">Batal</button>
+        <button type="submit" class="btn-primary">Simpan</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Toast Container -->
+<div class="toast-container" id="toast-container"></div>
 {% endblock content %}
+
+{% block extra_js %}
+<script src="{% static 'js/habit_tracker.js' %}"></script>
+{% endblock extra_js %}
