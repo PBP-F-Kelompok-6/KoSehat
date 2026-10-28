@@ -20,9 +20,10 @@ class Recipe(models.Model):
     is_plant_based = models.BooleanField(default=False)
     is_editor_choice = models.BooleanField(default=False)
     tag = models.CharField(max_length=50, choices=CATEGORY_CHOICES, default='Hemat')
-    external_api_id = models.IntegerField(blank=True, null=True, unique=True)
-    created_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
-    created_at = models.DateTimeField(auto_now_add=True)
+    external_api_id = models.IntegerField(blank=True, null=True, unique=True, db_index=True)
+    ingredients = models.JSONField(default=list, blank=True)
+    equipments = models.JSONField(default=list, blank=True)
+    instructions = models.JSONField(default=list, blank=True)
 
     def __str__(self):
         return self.title
