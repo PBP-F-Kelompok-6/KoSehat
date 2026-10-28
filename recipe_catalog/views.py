@@ -89,3 +89,14 @@ def toggle_save_recipe(request, recipe_id):
         saved.delete()
         return JsonResponse({'status': 'unbookmarked'})
     return JsonResponse({'status': 'bookmarked'})
+
+def recipe_detail_view(request, recipe_id):
+    recipe = get_object_or_404(Recipe, pk=recipe_id)
+    
+    context = {
+        'recipe': recipe,
+        'ingredients': recipe.ingredients,
+        'equipments': recipe.equipments,
+        'instructions': recipe.instructions,
+    }
+    return render(request, 'recipe_detail.html', context)
