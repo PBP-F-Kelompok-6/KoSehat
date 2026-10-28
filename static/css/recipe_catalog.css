@@ -458,6 +458,269 @@
   cursor: pointer;
 }
 
+/* ==========================================================================
+   MODAL COMPONENT (KoSehat Design System v1.0 Tokens)
+   ========================================================================== */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: rgba(45, 38, 31, 0.55); /* Dark overlay matching Bistre */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  opacity: 0;
+  visibility: hidden;
+  transition:
+    opacity 0.25s ease,
+    visibility 0.25s ease;
+  padding: 20px;
+}
+
+.modal-overlay.active {
+  opacity: 1;
+  visibility: visible;
+}
+
+.modal-card {
+  background-color: var(--color-white, #ffffff);
+  border-radius: 20px; /* UI Kit Component radius */
+  width: 100%;
+  max-width: 680px;
+  max-height: 90vh;
+  overflow-y: auto;
+  position: relative;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+  transform: translateY(20px);
+  transition: transform 0.25s ease;
+  padding: 28px;
+}
+
+.modal-overlay.active .modal-card {
+  transform: translateY(0);
+}
+
+.btn-modal-close {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 1px solid #e5e7eb;
+  background-color: #f4f3ea; /* Canvas Token */
+  color: #232e10;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 10;
+  transition: background-color 0.2s ease;
+}
+
+.btn-modal-close:hover {
+  background-color: #e2e8f0;
+}
+
+/* Modal Hero Header */
+.modal-recipe-hero {
+  display: flex;
+  gap: 20px;
+  margin-bottom: 20px;
+  align-items: flex-start;
+}
+
+.modal-recipe-img {
+  width: 140px;
+  height: 140px;
+  border-radius: 16px;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+.modal-recipe-header-info {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.badge-pill.badge-flax {
+  align-self: flex-start;
+  background-color: #fce762; /* Flax Token */
+  color: #232e10;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 4px 12px;
+  border-radius: 9999px;
+  text-transform: uppercase;
+}
+
+.modal-recipe-title {
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: #232e10;
+  line-height: 1.25;
+}
+
+.modal-meta-row {
+  display: flex;
+  gap: 14px;
+  font-size: 0.825rem;
+  color: #556b2f;
+  margin-top: 4px;
+}
+
+.modal-recipe-desc {
+  font-size: 0.875rem;
+  color: #4b5563;
+  line-height: 1.5;
+  margin-bottom: 20px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid #f3f4f6;
+}
+
+/* Sections & Grid */
+.modal-grid-details {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.modal-section-box {
+  background-color: #f4f3ea; /* Canvas Token */
+  padding: 16px;
+  border-radius: 12px;
+}
+
+.modal-section-box.full-width {
+  grid-column: span 2;
+}
+
+.modal-section-box h3 {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #232e10;
+  margin-bottom: 10px;
+}
+
+.custom-detail-list {
+  list-style: none;
+  font-size: 0.825rem;
+  color: #374151;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.custom-detail-list li {
+  position: relative;
+  padding-left: 14px;
+}
+
+.custom-detail-list li::before {
+  content: "•";
+  position: absolute;
+  left: 0;
+  color: #7da032; /* Apple Green Token */
+  font-weight: bold;
+}
+
+.custom-detail-list.tag-list {
+  flex-direction: row;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.custom-detail-list.tag-list li {
+  padding-left: 0;
+  background-color: #ffffff;
+  padding: 4px 10px;
+  border-radius: 6px;
+  border: 1px solid #e5e7eb;
+}
+
+.custom-detail-list.tag-list li::before {
+  content: "";
+}
+
+.custom-instructions-list {
+  padding-left: 20px;
+  font-size: 0.85rem;
+  color: #374151;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  line-height: 1.45;
+}
+
+/* Footer Actions */
+.modal-footer-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 24px;
+  padding-top: 16px;
+  border-top: 1px solid #f3f4f6;
+}
+
+.btn-action {
+  padding: 10px 20px;
+  border-radius: 9999px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  cursor: pointer;
+  border: none;
+  transition: all 0.2s ease;
+}
+
+.btn-action.btn-primer {
+  background-color: #313e1a; /* Dark Moss Green Token */
+  color: #ffffff;
+}
+
+.btn-action.btn-primer:hover {
+  background-color: #3f5627;
+}
+
+.btn-action.btn-sekunder {
+  background-color: #fce762; /* Flax Token */
+  color: #232e10;
+}
+
+.btn-action.btn-sekunder:hover {
+  background-color: #eab308;
+}
+
+/* Loading State */
+.modal-state-loading {
+  padding: 40px;
+  text-align: center;
+  color: #6b7280;
+}
+
+.spinner {
+  width: 32px;
+  height: 32px;
+  border: 3px solid #f3f4f6;
+  border-top: 3px solid #313e1a;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+  margin: 0 auto 12px;
+}
+
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
 /* Responsivity */
 @media (max-width: 1200px) {
   .recipe-cards-grid {
@@ -471,5 +734,21 @@
   }
   .catalog-sidebar {
     width: 100%;
+  }
+}
+
+@media (max-width: 640px) {
+  .modal-recipe-hero {
+    flex-direction: column;
+  }
+  .modal-recipe-img {
+    width: 100%;
+    height: 180px;
+  }
+  .modal-grid-details {
+    grid-template-columns: 1fr;
+  }
+  .modal-section-box.full-width {
+    grid-column: span 1;
   }
 }
