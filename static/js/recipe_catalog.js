@@ -4,15 +4,24 @@ const recipeGrid = document.getElementById("recipeGrid");
 const recipeCount = document.getElementById("recipeCount");
 const filterBtns = document.querySelectorAll(".pill-btn");
 
+const filterContainer = document.getElementById("filterContainer");
+const baseUrl = filterContainer ? filterContainer.getAttribute("data-url") : "";
+
 function fetchFilteredRecipes(query = "", tag = "") {
-    const url = `{% url 'recipe_catalog:filter_ajax' %}?q=${encodeURIComponent(query)}&tag=${encodeURIComponent(tag)}`;
+    if (!baseUrl) {
+        console.error("Gagal mengambil data-url dari HTML.");
+        return;
+    }
+
+    const url = `${baseUrl}?q=${encodeURIComponent(query)}&tag=${encodeURIComponent(tag)}`;
     fetch(url)
     .then((res) => res.json())
     .then((data) => {
         if (data.status === "success") {
         renderRecipes(data.recipes);
         }
-    });
+    })
+    .catch((err) => console.error("Error fetching recipes:", err));
 }
 
 function renderRecipes(recipes) {
