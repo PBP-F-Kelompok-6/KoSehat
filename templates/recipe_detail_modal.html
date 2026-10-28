@@ -1,0 +1,98 @@
+<!-- Modal Detail Resep -->
+<div id="recipeDetailModal" class="modal-overlay" aria-hidden="true">
+  <div class="modal-card recipe-detail-card" role="dialog" aria-modal="true">
+    <!-- Header Modal & Close Button -->
+    <button
+      type="button"
+      class="btn-modal-close"
+      id="btnCloseModal"
+      aria-label="Tutup"
+    >
+      <svg
+        width="20"
+        height="20"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2.5"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+      >
+        <line x1="18" y1="6" x2="6" y2="18"></line>
+        <line x1="6" y1="6" x2="18" y2="18"></line>
+      </svg>
+    </button>
+
+    <!-- Modal Loading State -->
+    <div id="modalLoading" class="modal-state-loading">
+      <div class="spinner"></div>
+      <p>Memuat detail resep...</p>
+    </div>
+
+    <!-- Modal Body Content -->
+    <div id="modalBody" class="modal-body-content" style="display: none">
+      <!-- Hero Header Resep -->
+      <div class="modal-recipe-hero">
+        <img
+          id="modalRecipeImage"
+          src=""
+          alt="Foto Resep"
+          class="modal-recipe-img"
+        />
+        <div class="modal-recipe-header-info">
+          <span id="modalRecipeTag" class="badge-pill badge-flax"></span>
+          <h2 id="modalRecipeTitle" class="modal-recipe-title"></h2>
+          <div class="modal-meta-row">
+            <span class="meta-item"
+              >⏱️ <strong id="modalRecipeTime"></strong> mnt</span
+            >
+            <span class="meta-item"
+              >💰 <strong id="modalRecipeCost"></strong
+            ></span>
+            <span class="meta-item"
+              >🥩 <strong id="modalRecipeProtein"></strong>g protein</span
+            >
+          </div>
+        </div>
+      </div>
+
+      <p id="modalRecipeDesc" class="modal-recipe-desc"></p>
+
+      <!-- Grid 2 Kolom: Bahan & Peralatan -->
+      <div class="modal-grid-details">
+        <div class="modal-section-box">
+          <h3>🛒 Bahan-bahan</h3>
+          <ul id="modalIngredientsList" class="custom-detail-list"></ul>
+        </div>
+        <div class="modal-section-box">
+          <h3>🍳 Peralatan</h3>
+          <ul id="modalEquipmentsList" class="custom-detail-list tag-list"></ul>
+        </div>
+      </div>
+
+      <!-- Langkah Pembuatan -->
+      <div class="modal-section-box full-width">
+        <h3>📖 Langkah Pembuatan</h3>
+        <ol id="modalInstructionsList" class="custom-instructions-list"></ol>
+      </div>
+
+      <!-- Modal Footer Action (UI Kit Style) -->
+      <div class="modal-footer-actions">
+        <button
+          type="button"
+          class="btn-action btn-sekunder"
+          id="btnBookmarkModal"
+        >
+          Bookmark Resep
+        </button>
+        <button
+          type="button"
+          class="btn-action btn-primer"
+          id="btnCloseModalFooter"
+        >
+          Selesai
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
