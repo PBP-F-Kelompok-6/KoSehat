@@ -1,0 +1,77 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% title %}Profil & Target Kesehatan - KoSehat{% endtitle %}
+
+{% block content %}
+<div style="max-width: 800px; margin: 0 auto; background: white; padding: 28px; border-radius: var(--radius-lg); box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);">
+    <h2 class="font-serif-heading" style="font-size: 1.75rem; color: var(--color-text-dark); margin-bottom: 8px;">
+        Profil & Target Kesehatan
+    </h2>
+    <p style="color: var(--color-text-muted); margin-bottom: 24px;">
+        Kelola informasi akun SSO UI dan sesuaikan target preferensi hidup sehatmu.
+    </p>
+
+    <form method="POST">
+        {% csrf_token %}
+
+        <h3 style="font-size: 1.1rem; color: var(--bg-sidebar); border-bottom: 2px solid var(--bg-main); padding-bottom: 6px; margin-bottom: 16px;">
+            Informasi Akun (SSO UI)
+        </h3>
+        
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 24px;">
+            <div>
+                <label style="display:block; font-size: 0.875rem; font-weight: 600; margin-bottom: 4px;">Nama Depan</label>
+                {{ u_form.first_name }}
+            </div>
+            <div>
+                <label style="display:block; font-size: 0.875rem; font-weight: 600; margin-bottom: 4px;">Nama Belakang</label>
+                {{ u_form.last_name }}
+            </div>
+            <div style="grid-column: span 2;">
+                <label style="display:block; font-size: 0.875rem; font-weight: 600; margin-bottom: 4px;">Email UI</label>
+                {{ u_form.email }}
+            </div>
+        </div>
+
+        <h3 style="font-size: 1.1rem; color: var(--bg-sidebar); border-bottom: 2px solid var(--bg-main); padding-bottom: 6px; margin-bottom: 16px;">
+            Target & Preferensi Kesehatan
+        </h3>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 24px;">
+            <div>
+                <label style="display:block; font-size: 0.875rem; font-weight: 600; margin-bottom: 4px;">Target Utama</label>
+                {{ p_form.health_goal }}
+            </div>
+            <div>
+                <label style="display:block; font-size: 0.875rem; font-weight: 600; margin-bottom: 4px;">Tingkat Aktivitas</label>
+                {{ p_form.activity_level }}
+            </div>
+            <div>
+                <label style="display:block; font-size: 0.875rem; font-weight: 600; margin-bottom: 4px;">Target Kalori Harian (kcal)</label>
+                {{ p_form.daily_calorie_target }}
+            </div>
+            <div>
+                <label style="display:block; font-size: 0.875rem; font-weight: 600; margin-bottom: 4px;">Target Air Minum (Liter)</label>
+                {{ p_form.daily_water_intake_target }}
+            </div>
+            <div style="grid-column: span 2;">
+                <label style="display:block; font-size: 0.875rem; font-weight: 600; margin-bottom: 4px;">Alergi / Preferensi Diet</label>
+                {{ p_form.dietary_restrictions }}
+            </div>
+            <div>
+                <label style="display:block; font-size: 0.875rem; font-weight: 600; margin-bottom: 4px;">Lokasi / Asrama</label>
+                {{ p_form.location }}
+            </div>
+            <div style="grid-column: span 2;">
+                <label style="display:block; font-size: 0.875rem; font-weight: 600; margin-bottom: 4px;">Bio</label>
+                {{ p_form.bio }}
+            </div>
+        </div>
+
+        <button type="submit" style="background-color: var(--bg-sidebar); color: var(--color-active); padding: 12px 24px; border: none; border-radius: var(--radius-md); font-weight: 700; cursor: pointer;">
+            Simpan Pembaruan
+        </button>
+    </form>
+</div>
+{% endblock content %}
