@@ -22,6 +22,14 @@
       {% for error in field.errors %}<small class="mp-error">{{ error }}</small>{% endfor %}
     </div>
     {% endfor %}
+
+    <div class="mp-field">
+      <label for="ingredients-input">Hitung kalori otomatis (opsional)</label>
+      <textarea id="ingredients-input" rows="3" placeholder="Satu bahan per baris: nama (bahasa Inggris), gram&#10;white rice cooked, 150&#10;egg, 50"></textarea>
+      <button type="button" id="calc-kcal" class="mp-btn mp-btn-light" style="align-self: flex-start">Hitung kalori</button>
+      <small id="calc-result" class="mp-muted"></small>
+    </div>
+
     <div class="mp-form-actions">
       <button type="submit" class="mp-btn">Simpan</button>
       <a href="{% url 'meal_planner:index' %}" class="mp-btn mp-btn-light">Batal</a>
@@ -29,3 +37,26 @@
   </form>
 </div>
 {% endblock content %}
+
+{% block extra_js %}
+<script>
+  document.getElementById('calc-kcal').addEventListener('click', async () => {
+    const result = document.getElementById('calc-result');
+    result.textContent = 'Menghitung...';
+    try {
+      const res = await fetch("{% url 'meal_planner:estimate_calories' %}", {
+        method: 'POST',
+        headers: { 'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value },
+        body: new URLSearchParams({ ingredients: document.getElementById('ingredients-input').value }),
+      });
+      const data = await res.json();
+      if (!res.ok) { result.textContent = data.error; return; }
+      document.getElementById('id_calories').value = data.kcal;
+      result.textContent = data.items.map(i => i.name + ' ' + i.grams + ' g = ' + i.kcal + ' kkal').join(' | ')
+        + ' -> total ' + data.kcal + ' kkal (perkiraan, boleh diubah)';
+    } catch (e) {
+      result.textContent = 'Gagal menghubungi server.';
+    }
+  });
+</script>
+{% endblock extra_js %}

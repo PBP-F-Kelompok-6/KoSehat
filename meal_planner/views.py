@@ -1,12 +1,12 @@
 from datetime import date, timedelta
-
+from django.http import JsonResponse
 from django.contrib import messages
 from django.contrib.auth import get_user_model
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.utils import timezone
 from django.views.decorators.http import require_POST
-
+from . import nutrition
 from .forms import MealForm
 from .models import Meal
 
@@ -95,3 +95,13 @@ def meal_delete(request, pk):
     meal.delete()
     messages.success(request, 'Menu dihapus.')
     return redirect(_planner_url(meal_date))
+
+
+@require_POST
+def estimate_calories(request):
+    """Dipanggil dari form lewat JavaScript. Mengembalikan JSON."""
+    try:
+        result = nutrition.estimate_total(request.POST.get('ingredients', ''))
+    except nutrition.NutritionError as e:
+        return JsonResponse({'error': str(e)}, status=400)
+    return JsonResponse(result)
