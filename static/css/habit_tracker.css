@@ -219,3 +219,69 @@
   right: 24px;
   z-index: 200;
 }
+
+/* ==========================================================================
+   WEEKLY CALENDAR STYLES
+   ========================================================================== */
+.weekly-calendar-section {
+  margin-bottom: 20px;
+}
+
+/* Judul Bulan di Tengah Atas */
+.calendar-month-header {
+  font-family: var(--font-serif);
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: var(--color-text-dark);
+  text-align: center;
+  margin-bottom: 16px;
+}
+
+.day-selector-strip {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 12px;
+}
+
+.day-card {
+  background: var(--color-white);
+  border-radius: var(--radius-md);
+  padding: 12px;
+  text-align: center;
+  border: 1px solid #e5e7eb;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+/* Hari Ini (Dark Green) */
+.day-card.active {
+  background: var(--bg-sidebar);
+  color: var(--color-white);
+  border-color: var(--bg-sidebar);
+}
+
+/* Tanggal di Luar Bulan Berjalan (Abu-abu) */
+.day-card.other-month {
+  background-color: #e5e7eb;
+  color: #9ca3af;
+  border-color: #d1d5db;
+}
+
+.day-card .day-name {
+  font-size: 0.75rem;
+  font-weight: 600;
+  opacity: 0.8;
+}
+
+.day-card .day-num {
+  font-size: 1.125rem;
+  font-weight: 700;
+  margin-top: 4px;
+}
+
+/* Garis Tipis Pemisah Section */
+.calendar-divider {
+  border: none;
+  border-top: 1px solid #e5e7eb;
+  margin: 24px 0;
+}

@@ -128,3 +128,62 @@ document.getElementById('form-add-habit').onsubmit = async (e) => {
 
 // Initial Load
 document.addEventListener('DOMContentLoaded', loadHabits);
+
+function renderWeeklyCalendar() {
+  const today = new Date();
+
+  // 1. Set Keterangan Bulan Berdasarkan Hari Ini
+  const monthNames = [
+    "January", "February", "March", "April", "May", "June",
+    "July", "August", "September", "October", "November", "December"
+  ];
+  const monthLabel = document.getElementById('calendar-month-label');
+  if (monthLabel) {
+    monthLabel.innerText = monthNames[today.getMonth()];
+  }
+
+  // 2. Hitung Tanggal Hari Senin pada Minggu Berjalan
+  const dayOfWeek = today.getDay(); // 0 = Minggu, 1 = Senin, ..., 6 = Sabtu
+  const distanceToMonday = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
+  const monday = new Date(today);
+  monday.setDate(today.getDate() + distanceToMonday);
+
+  const dayNamesEng = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+  const stripContainer = document.getElementById('day-selector-strip');
+  if (!stripContainer) return;
+
+  stripContainer.innerHTML = '';
+
+  // 3. Render 7 Hari (Mon - Sun)
+  for (let i = 0; i < 7; i++) {
+    const currentDate = new Date(monday);
+    currentDate.setDate(monday.getDate() + i);
+
+    // Cek Apakah Hari Ini
+    const isToday =
+      currentDate.getDate() === today.getDate() &&
+      currentDate.getMonth() === today.getMonth() &&
+      currentDate.getFullYear() === today.getFullYear();
+
+    // Cek Apakah Berada di Bulan Lain Dibanding Hari Ini
+    const isOtherMonth = currentDate.getMonth() !== today.getMonth();
+
+    const dayNumStr = String(currentDate.getDate()).padStart(2, '0');
+
+    // Buat Elemen Card
+    const card = document.createElement('div');
+    card.className = `day-card ${isToday ? 'active' : ''} ${isOtherMonth ? 'other-month' : ''}`;
+    card.innerHTML = `
+      <div class="day-name">${dayNamesEng[i]}</div>
+      <div class="day-num">${dayNumStr}</div>
+    `;
+
+    stripContainer.appendChild(card);
+  }
+}
+
+// Panggil fungsi saat halaman dimuat
+document.addEventListener('DOMContentLoaded', () => {
+  renderWeeklyCalendar();
+  loadHabits(); // Fungsi loadHabits yang sudah ada sebelumnya
+});

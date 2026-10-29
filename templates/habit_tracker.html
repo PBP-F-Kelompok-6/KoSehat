@@ -23,16 +23,18 @@
     </div>
   </header>
 
-  <!-- Day Selector -->
-  <div class="day-selector-strip">
-    <div class="day-card"><div class="day-name">Sen</div><div class="day-num">28</div></div>
-    <div class="day-card"><div class="day-name">Sel</div><div class="day-num">29</div></div>
-    <div class="day-card active"><div class="day-name">Rab</div><div class="day-num">30</div></div>
-    <div class="day-card"><div class="day-name">Kam</div><div class="day-num">01</div></div>
-    <div class="day-card"><div class="day-name">Jum</div><div class="day-num">02</div></div>
-    <div class="day-card"><div class="day-name">Sab</div><div class="day-num">03</div></div>
-    <div class="day-card"><div class="day-name">Min</div><div class="day-num">04</div></div>
+  
+  <!-- Weekly Calendar Section -->
+  <div class="weekly-calendar-section">
+    <!-- Keterangan Bulan (Dinamis via JS) -->
+    <h3 class="calendar-month-header" id="calendar-month-label">October</h3>
+    
+    <!-- Strip Kartu Hari (Dinamis via JS) -->
+    <div class="day-selector-strip" id="day-selector-strip"></div>
   </div>
+
+  <!-- Garis Pemisah Tipis -->
+  <hr class="calendar-divider" />
 
   <!-- KPI Cards -->
   <div class="kpi-grid">
