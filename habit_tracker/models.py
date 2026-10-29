@@ -42,7 +42,8 @@ class EnergyLog(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='energy_logs')
     date = models.DateField()
     energy_level = models.IntegerField(default=8, help_text="Skala 1 - 10")
-    focus_minutes = models.IntegerField(default=195, help_text="Waktu fokus dalam menit")
+    focus_minutes = models.IntegerField(default=195, help_text="Target waktu fokus dalam menit")
+    logged_focus_minutes = models.IntegerField(default=0, help_text="Waktu fokus yang telah dilalui dalam menit")
 
     class Meta:
         unique_together = ('user', 'date')
