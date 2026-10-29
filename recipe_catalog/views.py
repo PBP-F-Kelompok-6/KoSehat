@@ -125,3 +125,52 @@ def recipe_detail_api(request, recipe_id):
             'instructions': recipe.instructions,
         }
     })
+
+@require_GET
+def article_detail_api(request, article_id):
+    article = get_object_or_404(EducationArticle, pk=article_id)
+    return JsonResponse({
+        'status': 'success',
+        'article': {
+            'id': article.id,
+            'title': article.title,
+            'snippet': article.snippet,
+            'content': article.content,
+            'read_time_minutes': article.read_time_minutes,
+            'category': article.category,
+            'created_at': article.created_at.strftime('%d %b %Y'),
+        }
+    })
+
+@require_POST
+def article_create_api(request):
+    try:
+        data = json.loads(request.body)
+        form = EducationArticleForm(data)
+    except json.JSONDecodeError:
+        form = EducationArticleForm(request.POST)
+
+    if form.is_valid():
+        article = form.save()
+        return JsonResponse({'status': 'success', 'message': 'Artikel berhasil dibuat', 'article_id': article.id})
+    return JsonResponse({'status': 'error', 'errors': form.errors}, status=400)
+
+@require_POST
+def article_update_api(request, article_id):
+    article = get_object_or_404(EducationArticle, pk=article_id)
+    try:
+        data = json.loads(request.body)
+        form = EducationArticleForm(data, instance=article)
+    except json.JSONDecodeError:
+        form = EducationArticleForm(request.POST, instance=article)
+
+    if form.is_valid():
+        form.save()
+        return JsonResponse({'status': 'success', 'message': 'Artikel berhasil diperbarui'})
+    return JsonResponse({'status': 'error', 'errors': form.errors}, status=400)
+
+@require_POST
+def article_delete_api(request, article_id):
+    article = get_object_or_404(EducationArticle, pk=article_id)
+    article.delete()
+    return JsonResponse({'status': 'success', 'message': 'Artikel berhasil dihapus'})
