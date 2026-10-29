@@ -721,6 +721,131 @@
   }
 }
 
+.kosehat-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.form-row-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.form-label {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  color: #313e1a; /* Dark Moss Green */
+  text-transform: uppercase;
+}
+
+.form-control-kosehat {
+  width: 100%;
+  background-color: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 10px 14px;
+  font-size: 0.875rem;
+  font-family: inherit;
+  color: #1a1a1a;
+  outline: none;
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.form-control-kosehat:focus {
+  border-color: #313e1a;
+  box-shadow: 0 0 0 3px rgba(49, 62, 26, 0.1);
+}
+
+.textarea-kosehat {
+  resize: vertical;
+  min-height: 100px;
+}
+
+.btn-action.btn-ghost {
+  background: transparent;
+  color: #6b7280;
+  border: 1px solid #e5e7eb;
+}
+
+.btn-action.btn-ghost:hover {
+  background-color: #f4f3ea;
+  color: #232e10;
+}
+
+.btn-action.btn-danger {
+  background-color: #fef2f2;
+  color: #dc2626;
+  border: 1px solid #fecaca;
+}
+
+.btn-action.btn-danger:hover {
+  background-color: #fee2e2;
+}
+
+.article-rich-content {
+  font-size: 0.875rem;
+  line-height: 1.6;
+  color: #374151;
+  white-space: pre-line;
+}
+
+/* Sidebar Actions header */
+.widget-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.btn-add-article-icon {
+  background-color: #fce762;
+  border: none;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  font-size: 1.1rem;
+  font-weight: bold;
+  color: #232e10;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.2s ease;
+}
+
+.btn-add-article-icon:hover {
+  transform: scale(1.08);
+}
+
+.article-card-header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+.btn-edit-article-sm {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 0.75rem;
+  color: #8fa468;
+  padding: 2px 4px;
+}
+
+.btn-edit-article-sm:hover {
+  color: #313e1a;
+}
+
 /* Responsivity */
 @media (max-width: 1200px) {
   .recipe-cards-grid {
