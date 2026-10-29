@@ -108,3 +108,92 @@
   color: var(--color-text-muted);
   white-space: pre-line; overflow-wrap: anywhere;
 }
+
+/* Kalimat penyemangat eco-diet */
+.mp-eco-banner {
+  margin: 0 0 20px; padding: 12px 16px;
+  background: var(--color-active); color: var(--color-active-text);
+  border-radius: var(--radius-md); font-weight: 600; font-size: 0.9375rem;
+}
+
+/* Hari yang sudah lewat dipudarkan, hari ini diberi label */
+.mp-day { transition: opacity 0.2s ease; }
+.mp-day.is-past { opacity: 0.65; }
+.mp-day.is-past:hover { opacity: 1; }
+.mp-today-chip {
+  display: inline-block; margin-left: 6px; padding: 2px 8px; vertical-align: middle;
+  background: var(--bg-sidebar); color: var(--color-active);
+  border-radius: var(--radius-full); font: 700 0.625rem var(--font-sans);
+  letter-spacing: 0.04em; text-transform: uppercase;
+}
+
+/* Tampilan hari kosong */
+.mp-empty-state { text-align: center; padding: 18px 0 8px; color: var(--color-text-muted); }
+.mp-empty-icon { display: block; font-size: 1.75rem; margin-bottom: 4px; }
+.mp-empty-state p { font-size: 0.875rem; margin-bottom: 6px; }
+
+/* Banner eco dengan ilustrasi */
+.mp-eco-banner { display: flex; align-items: center; gap: 14px; }
+.mp-eco-banner p { margin: 0; }
+.mp-eco-img { width: 64px; height: 64px; flex-shrink: 0; }
+
+/* ===== Percantik tampilan (mencolok tapi tidak mengganggu) ===== */
+
+/* Judul dengan garis aksen */
+.mp-title::after {
+  content: ''; display: block; width: 48px; height: 4px; margin-top: 8px;
+  border-radius: var(--radius-full); background: var(--color-active);
+}
+
+/* Kartu ringkasan: ikon + angka serif + bar progres */
+.mp-stat { display: flex; align-items: center; gap: 12px; }
+.mp-stat-icon {
+  width: 42px; height: 42px; flex-shrink: 0; border-radius: 50%;
+  background: #f0eedf; display: grid; place-items: center; font-size: 1.25rem;
+}
+.mp-card-eco .mp-stat-icon { background: rgba(255, 255, 255, 0.65); }
+.mp-stat-body { flex: 1; min-width: 0; }
+.mp-stat-value { display: block; font-family: var(--font-serif); font-size: 1.625rem; line-height: 1.15; }
+.mp-meter { height: 6px; margin-top: 6px; border-radius: var(--radius-full); background: rgba(49, 62, 26, 0.15); overflow: hidden; }
+.mp-meter-fill { height: 100%; border-radius: inherit; background: var(--bg-sidebar); transition: width 0.6s ease; }
+
+/* Warna per waktu makan */
+.mp-meal { border-left: 3px solid transparent; padding-left: 10px; }
+.mp-type-sarapan { border-left-color: #e0b84a; }
+.mp-type-siang   { border-left-color: #6b8e23; }
+.mp-type-malam   { border-left-color: #4a6a8a; }
+.mp-type-camilan { border-left-color: #d9773a; }
+.mp-type-sarapan .mp-meal-type { color: #a97f12; }
+.mp-type-siang   .mp-meal-type { color: #55731b; }
+.mp-type-malam   .mp-meal-type { color: #3f5a78; }
+.mp-type-camilan .mp-meal-type { color: #b85f22; }
+.mp-type-sarapan .mp-meal-type::before { content: '🌅 '; }
+.mp-type-siang   .mp-meal-type::before { content: '☀️ '; }
+.mp-type-malam   .mp-meal-type::before { content: '🌙 '; }
+.mp-type-camilan .mp-meal-type::before { content: '🍪 '; }
+
+/* Hari ini sedikit lebih menonjol */
+.mp-day.is-today { background: linear-gradient(180deg, #f8fae4 0%, var(--color-white) 45%); }
+
+/* Hover halus */
+.mp-day { transition: opacity 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease; }
+.mp-day:hover { transform: translateY(-2px); box-shadow: 0 8px 18px rgba(49, 62, 26, 0.10); }
+.mp-btn { transition: transform 0.15s ease, filter 0.15s ease, background-color 0.15s ease; }
+.mp-btn:hover { filter: brightness(1.15); transform: translateY(-1px); }
+.mp-btn-light:hover { filter: none; background: #f4f3ea; }
+.mp-btn:disabled { opacity: 0.6; cursor: wait; transform: none; filter: none; }
+
+/* Fokus input di form */
+.mp-field input:focus, .mp-field select:focus, .mp-field textarea:focus {
+  outline: none; border-color: var(--bg-sidebar);
+  box-shadow: 0 0 0 3px rgba(230, 238, 156, 0.9);
+}
+
+/* Hormati pengguna yang mematikan animasi */
+@media (prefers-reduced-motion: reduce) {
+  .mp-day, .mp-btn, .mp-meter-fill { transition: none; }
+  .mp-day:hover, .mp-btn:hover { transform: none; }
+}
+
+/* Label minggu + tombol kembali ke minggu ini */
+.mp-week-label { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; justify-content: center; }

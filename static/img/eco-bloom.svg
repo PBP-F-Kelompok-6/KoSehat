@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" role="img" aria-label="Tanaman yang tumbuh subur">
+  <style>
+    .sway { transform-origin: 60px 92px; animation: sway 3.4s ease-in-out infinite; }
+    .twinkle { transform-box: fill-box; transform-origin: center; animation: twinkle 1.8s ease-in-out infinite; }
+    .t2 { animation-delay: 0.6s; } .t3 { animation-delay: 1.2s; }
+    @keyframes sway { 0%, 100% { transform: rotate(-3deg); } 50% { transform: rotate(3deg); } }
+    @keyframes twinkle { 0%, 100% { opacity: 0.2; transform: scale(0.6); } 50% { opacity: 1; transform: scale(1.1); } }
+  </style>
+  <circle cx="60" cy="60" r="56" fill="#f4f3ea"/>
+  <ellipse cx="60" cy="96" rx="38" ry="12" fill="#8b6b4a"/>
+  <ellipse cx="60" cy="92" rx="33" ry="9" fill="#a07f5a"/>
+  <g class="sway">
+    <path d="M60 92 C60 70 60 54 60 34" stroke="#4c6b1f" stroke-width="4.5" fill="none" stroke-linecap="round"/>
+    <path d="M60 78 C44 78 34 70 34 58 C49 58 58 65 60 78 Z" fill="#7fa33a"/>
+    <path d="M60 68 C76 68 87 60 87 47 C72 47 62 54 60 68 Z" fill="#6b8e23"/>
+    <path d="M60 52 C48 52 41 45 41 36 C52 36 58 41 60 52 Z" fill="#8fb44a"/>
+    <circle cx="60" cy="30" r="9" fill="#e5533d"/>
+    <circle cx="57" cy="27" r="2.6" fill="#f4a398"/>
+    <path d="M56 22 q4 -5 8 0" stroke="#4c6b1f" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+  </g>
+  <path class="twinkle" d="M24 30 l2.4 5.6 5.6 2.4 -5.6 2.4 -2.4 5.6 -2.4 -5.6 -5.6 -2.4 5.6 -2.4z" fill="#d4b800"/>
+  <path class="twinkle t2" d="M96 24 l2 4.6 4.6 2 -4.6 2 -2 4.6 -2 -4.6 -4.6 -2 4.6 -2z" fill="#d4b800"/>
+  <path class="twinkle t3" d="M94 74 l1.6 3.8 3.8 1.6 -3.8 1.6 -1.6 3.8 -1.6 -3.8 -3.8 -1.6 3.8 -1.6z" fill="#d4b800"/>
+</svg>

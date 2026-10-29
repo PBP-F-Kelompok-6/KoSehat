@@ -27,7 +27,6 @@ def _parse_date(value, default):
 
 def _user(request):
     # SEMENTARA (tanpa login): pakai user 'demo' kalau belum login.
-    # TODO: hapus fungsi ini & pasang lagi @login_required kalau modul autentikasi sudah ada.
     if request.user.is_authenticated:
         return request.user
     user, _ = get_user_model().objects.get_or_create(username='demo')
@@ -36,6 +35,26 @@ def _user(request):
 
 def _monday(d):
     return d - timedelta(days=d.weekday())
+
+
+def _eco_message(meal_count, homemade_count, packaging_used):
+    """Kalimat singkat di bawah ringkasan, menyesuaikan data minggu itu."""
+    if meal_count == 0:
+        return 'Belum ada menu di minggu ini. Yuk mulai rencanakan!'
+    if homemade_count == 0:
+        return 'Belum ada menu masak sendiri di minggu ini. Coba satu dulu, dompet dan bumi sama-sama senang.'
+    if packaging_used == 0:
+        return f'Mantap! {homemade_count} dari {meal_count} menu masak sendiri dan tanpa kemasan sekali pakai.'
+    return f'Mantap, {homemade_count} dari {meal_count} menu masak sendiri di minggu ini.'
+
+
+def _eco_image(meal_count, homemade_count, packaging_used):
+    """Ilustrasi tanaman yang 'tumbuh' mengikuti progres eco-diet minggu itu."""
+    if meal_count == 0 or homemade_count == 0:
+        return 'img/eco-seed.svg'
+    if packaging_used == 0:
+        return 'img/eco-bloom.svg'
+    return 'img/eco-sprout.svg'
 
 
 def _planner_url(d):
@@ -61,6 +80,7 @@ def planner(request):
             'date': d,
             'label': HARI[i],
             'is_today': d == today,
+            'is_past': d < today,
             'meals': day_meals,
             'cost': sum(m.estimated_cost for m in day_meals),
         })
@@ -70,11 +90,24 @@ def planner(request):
         'start': start,
         'end': end,
         'prev_start': (start - timedelta(days=7)).isoformat(),
+        'is_current_week': start == _monday(today),
+        'current_start': _monday(today).isoformat(),
         'next_start': (start + timedelta(days=7)).isoformat(),
         'week_cost': sum(m.estimated_cost for m in meals),
         'week_meal_count': len(meals),
         'week_homemade_count': sum(1 for m in meals if m.is_homemade),
         'week_packaging_used': sum(m.packaging_used for m in meals),
+        'homemade_percent': round(100 * sum(1 for m in meals if m.is_homemade) / len(meals)) if meals else 0,
+        'eco_image': _eco_image(
+            len(meals),
+            sum(1 for m in meals if m.is_homemade),
+            sum(m.packaging_used for m in meals),
+        ),
+        'eco_message': _eco_message(
+            len(meals),
+            sum(1 for m in meals if m.is_homemade),
+            sum(m.packaging_used for m in meals),
+        ),
     })
 
 
