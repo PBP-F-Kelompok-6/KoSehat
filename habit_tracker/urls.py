@@ -9,4 +9,5 @@ urlpatterns = [
     path('api/add/', views.add_habit_ajax, name='add_habit'),
     path('api/toggle/<int:habit_id>/', views.toggle_habit_ajax, name='toggle_habit'),
     path('api/delete/<int:habit_id>/', views.delete_habit_ajax, name='delete_habit'),
+    path('api/energy/', views.log_energy_ajax, name='log_energy'),
 ]

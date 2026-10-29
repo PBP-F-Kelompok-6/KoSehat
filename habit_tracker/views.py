@@ -4,8 +4,8 @@ from django.http import JsonResponse
 from django.views.decorators.http import require_POST, require_GET
 from django.contrib.auth.decorators import login_required
 from django.utils import timezone
-from .models import Habit, HabitLog, SleepLog
-from .forms import HabitForm
+from .models import Habit, HabitLog, SleepLog, EnergyLog
+from .forms import HabitForm, EnergyLogForm
 
 @login_required(login_url='/auth/login/')
 def habit_tracker_view(request):
@@ -39,15 +39,21 @@ def get_habits_json(request):
     total_habits = len(habits_data)
     progress_percent = int((completed_count / total_habits * 100)) if total_habits > 0 else 0
 
+    energy_log, _ = EnergyLog.objects.get_or_create(user=request.user, date=today)
+    
+    hours = energy_log.focus_minutes // 60
+    mins = energy_log.focus_minutes % 60
+    focus_time_str = f"{hours}j {mins}m" if hours > 0 else f"{mins}m"
+
     return JsonResponse({
         'habits': habits_data,
         'summary': {
             'total': total_habits,
             'completed': completed_count,
             'progress_percent': progress_percent,
-            'streak': 6, # Contoh data dynamic agregat
-            'energy_score': 8,
-            'focus_time': "3j 15m"
+            'energy_level': energy_log.energy_level,
+            'focus_minutes': energy_log.focus_minutes,
+            'focus_time_str': focus_time_str,
         }
     }, status=200)
 
@@ -70,10 +76,7 @@ def toggle_habit_ajax(request, habit_id):
     log, _ = HabitLog.objects.get_or_create(habit=habit, date=today)
     
     log.is_completed = not log.is_completed
-    if log.is_completed:
-        log.current_value = habit.target_value
-    else:
-        log.current_value = 0
+    log.current_value = habit.target_value if log.is_completed else 0
     log.save()
 
     return JsonResponse({
@@ -87,3 +90,15 @@ def delete_habit_ajax(request, habit_id):
     habit = get_object_or_404(Habit, id=habit_id, user=request.user)
     habit.delete()
     return JsonResponse({'message': 'Kebiasaan berhasil dihapus'}, status=200)
+
+@login_required
+@require_POST
+def log_energy_ajax(request):
+    today = timezone.now().date()
+    energy_log, _ = EnergyLog.objects.get_or_create(user=request.user, date=today)
+    
+    form = EnergyLogForm(request.POST, instance=energy_log)
+    if form.is_valid():
+        form.save()
+        return JsonResponse({'message': 'Refleksi energi & fokus berhasil disimpan!'}, status=200)
+    return JsonResponse({'errors': form.errors.get_json_data()}, status=400)
