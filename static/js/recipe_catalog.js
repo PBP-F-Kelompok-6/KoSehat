@@ -18,6 +18,30 @@ const btnBookmarkModal = document.getElementById('btnBookmarkModal');
   const detailUrlTemplate = modalOverlay ? modalOverlay.getAttribute("data-detail-url") : "";
   const bookmarkUrlTemplate = modalOverlay ? modalOverlay.getAttribute("data-bookmark-url") : "";
 
+const articleDetailModal = document.getElementById("articleDetailModal");
+const articleFormModal = document.getElementById("articleFormModal");
+
+const articleModalLoading = document.getElementById("articleModalLoading");
+const articleModalBody = document.getElementById("articleModalBody");
+
+const articleForm = document.getElementById("articleForm");
+const articleIdInput = document.getElementById("articleIdInput");
+const articleTitleInput = document.getElementById("articleTitleInput");
+const articleCategoryInput = document.getElementById("articleCategoryInput");
+const articleReadTimeInput = document.getElementById("articleReadTimeInput");
+const articleSnippetInput = document.getElementById("articleSnippetInput");
+const articleContentInput = document.getElementById("articleContentInput");
+
+const btnAddArticle = document.getElementById("btnAddArticle");
+const btnDeleteArticle = document.getElementById("btnDeleteArticle");
+const articleFormModalTitle = document.getElementById("articleFormModalTitle");
+
+// URLs
+const articleDetailUrlTemplate = articleDetailModal ? articleDetailModal.getAttribute("data-detail-url") : "";
+  const articleCreateUrl = articleFormModal ? articleFormModal.getAttribute("data-create-url") : "";
+  const articleUpdateUrlTemplate = articleFormModal ? articleFormModal.getAttribute("data-update-url") : "";
+  const articleDeleteUrlTemplate = articleFormModal ? articleFormModal.getAttribute("data-delete-url") : "";
+
 function fetchFilteredRecipes(query = "", tag = "") {
     if (!baseUrl) {
         console.error("Gagal mengambil data-url dari HTML.");
@@ -234,4 +258,209 @@ let currentActiveRecipeId = null;
     }
     return cookieValue;
   }
+
+  // Event Delegation: Tombol Tambah / Edit / Kartu Artikel
+  document.addEventListener("click", (e) => {
+    // Tombol Tambah Artikel
+    const addBtn = e.target.closest("#btnAddArticle, .btn-add-article-icon");
+    if (addBtn) {
+      e.preventDefault();
+      console.log("➕ [KoSehat] Tombol tambah artikel diklik!");
+      openArticleFormModal();
+      return;
+    }
+
+    // Tombol Edit Artikel
+    const editBtn = e.target.closest(".btn-edit-article-sm");
+    if (editBtn && editBtn.dataset.editId) {
+      e.stopPropagation();
+      console.log("✏️ [KoSehat] Tombol edit artikel diklik! ID:", editBtn.dataset.editId);
+      openArticleFormModal(editBtn.dataset.editId);
+      return;
+    }
+
+    // Klik Kartu Artikel (Lihat Detail)
+    const card = e.target.closest(".article-card");
+    if (card && card.dataset.articleId) {
+      e.preventDefault();
+      console.log("📖 [KoSehat] Kartu artikel diklik! ID:", card.dataset.articleId);
+      openArticleDetailModal(card.dataset.articleId);
+    }
+  });
+
+  // Fungsi Buka Modal Form (Create / Edit)
+  function openArticleFormModal(articleId = null) {
+    if (!articleFormModal) {
+      console.error("❌ [KoSehat] Element #articleFormModal tidak ditemukan di DOM! Pastikan {% include 'article_modal.html' %} sudah terpasang.");
+      return;
+    }
+
+    if (articleForm) articleForm.reset();
+    if (articleIdInput) articleIdInput.value = "";
+
+    if (articleId) {
+      // Edit Mode
+      if (articleFormModalTitle) articleFormModalTitle.textContent = "Edit Artikel Edukasi";
+      if (btnDeleteArticle) btnDeleteArticle.style.display = "block";
+
+      if (articleDetailUrlTemplate) {
+        const url = articleDetailUrlTemplate.replace("0", articleId);
+        fetch(url)
+          .then((res) => res.json())
+          .then((data) => {
+            if (data.status === "success") {
+              const a = data.article;
+              if (articleIdInput) articleIdInput.value = a.id;
+              if (articleTitleInput) articleTitleInput.value = a.title;
+              if (articleCategoryInput) articleCategoryInput.value = a.category;
+              if (articleReadTimeInput) articleReadTimeInput.value = a.read_time_minutes;
+              if (articleSnippetInput) articleSnippetInput.value = a.snippet;
+              if (articleContentInput) articleContentInput.value = a.content;
+            }
+          })
+          .catch((err) => console.error("Error fetching article detail for edit:", err));
+      }
+    } else {
+      // Create Mode
+      if (articleFormModalTitle) articleFormModalTitle.textContent = "Tambah Artikel Edukasi";
+      if (btnDeleteArticle) btnDeleteArticle.style.display = "none";
+    }
+
+    articleFormModal.classList.add("active");
+    articleFormModal.setAttribute("aria-hidden", "false");
+  }
+
+  // Detail Reader Modal
+  function openArticleDetailModal(articleId) {
+    if (!articleDetailModal || !articleDetailUrlTemplate) {
+      console.error("❌ [KoSehat] Element #articleDetailModal tidak ditemukan di DOM.");
+      return;
+    }
+
+    const url = articleDetailUrlTemplate.replace("0", articleId);
+    articleDetailModal.classList.add("active");
+    articleDetailModal.setAttribute("aria-hidden", "false");
+    
+    if (articleModalLoading) articleModalLoading.style.display = "block";
+    if (articleModalBody) articleModalBody.style.display = "none";
+
+    fetch(url)
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.status === "success") {
+          const a = data.article;
+          const setTxt = (id, txt) => {
+            const el = document.getElementById(id);
+            if (el) el.textContent = txt;
+          };
+
+          setTxt("articleModalTitle", a.title);
+          setTxt("articleCategoryBadge", a.category);
+          setTxt("articleReadTime", a.read_time_minutes);
+          setTxt("articleDate", a.created_at);
+          setTxt("articleSnippet", a.snippet);
+          setTxt("articleContentBody", a.content);
+
+          if (articleModalLoading) articleModalLoading.style.display = "none";
+          if (articleModalBody) articleModalBody.style.display = "block";
+        }
+      })
+      .catch((err) => console.error("Gagal memuat detail artikel:", err));
+  }
+
+  // 4. Submit Form Handler (Create / Update)
+  if (articleForm) {
+    articleForm.addEventListener("submit", (e) => {
+      e.preventDefault();
+
+      const articleId = articleIdInput ? articleIdInput.value : "";
+      const isEdit = Boolean(articleId);
+      
+      const targetUrl = isEdit
+        ? (articleUpdateUrlTemplate ? articleUpdateUrlTemplate.replace("0", articleId) : "")
+        : articleCreateUrl;
+
+      if (!targetUrl) {
+        console.error("❌ [KoSehat] Target URL submit artikel tidak valid.");
+        return;
+      }
+
+      const payload = {
+        title: articleTitleInput ? articleTitleInput.value : "",
+        category: articleCategoryInput ? articleCategoryInput.value : "Nutrisi",
+        read_time_minutes: articleReadTimeInput ? parseInt(articleReadTimeInput.value, 10) : 5,
+        snippet: articleSnippetInput ? articleSnippetInput.value : "",
+        content: articleContentInput ? articleContentInput.value : "",
+      };
+
+      fetch(targetUrl, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "X-CSRFToken": getCookie("csrftoken"),
+        },
+        body: JSON.stringify(payload),
+      })
+        .then((res) => res.json())
+        .then((data) => {
+          if (data.status === "success") {
+            closeArticleModals();
+            window.location.reload();
+          } else {
+            alert("Gagal menyimpan artikel. Periksa kembali inputan Anda.");
+          }
+        })
+        .catch((err) => console.error("Error submit article:", err));
+    });
+  }
+
+  // Delete Handler
+  if (btnDeleteArticle) {
+    btnDeleteArticle.addEventListener("click", () => {
+      const articleId = articleIdInput ? articleIdInput.value : "";
+      if (!articleId || !articleDeleteUrlTemplate) return;
+
+      if (confirm("Apakah Anda yakin ingin menghapus artikel ini?")) {
+        const deleteUrl = articleDeleteUrlTemplate.replace("0", articleId);
+
+        fetch(deleteUrl, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "X-CSRFToken": getCookie("csrftoken"),
+          },
+        })
+          .then((res) => res.json())
+          .then((data) => {
+            if (data.status === "success") {
+              closeArticleModals();
+              window.location.reload();
+            }
+          })
+          .catch((err) => console.error("Error delete article:", err));
+      }
+    });
+  }
+
+  // Close Modals Helper
+  function closeArticleModals() {
+    if (articleDetailModal) {
+      articleDetailModal.classList.remove("active");
+      articleDetailModal.setAttribute("aria-hidden", "true");
+    }
+    if (articleFormModal) {
+      articleFormModal.classList.remove("active");
+      articleFormModal.setAttribute("aria-hidden", "true");
+    }
+  }
+
+  const btnCloseArticleDetail = document.getElementById("btnCloseArticleDetail");
+  const btnCloseArticleDetailFooter = document.getElementById("btnCloseArticleDetailFooter");
+  const btnCloseArticleForm = document.getElementById("btnCloseArticleForm");
+  const btnCancelArticleForm = document.getElementById("btnCancelArticleForm");
+
+  if (btnCloseArticleDetail) btnCloseArticleDetail.addEventListener("click", closeArticleModals);
+  if (btnCloseArticleDetailFooter) btnCloseArticleDetailFooter.addEventListener("click", closeArticleModals);
+  if (btnCloseArticleForm) btnCloseArticleForm.addEventListener("click", closeArticleModals);
+  if (btnCancelArticleForm) btnCancelArticleForm.addEventListener("click", closeArticleModals);
 });
