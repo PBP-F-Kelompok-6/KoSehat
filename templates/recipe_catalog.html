@@ -185,31 +185,31 @@ Edukasi - KoSehat{% endblock title %} {% block extra_css %}
 
         <div class="article-list">
           {% for article in articles %}
-          <div class="article-card">
-            <h4>{{ article.title }}</h4>
+          <div
+            class="article-card"
+            data-article-id="{{ article.id }}"
+            style="cursor: pointer"
+          >
+            <div class="article-card-header-row">
+              <h4>{{ article.title }}</h4>
+              <button
+                type="button"
+                class="btn-edit-article-sm"
+                data-edit-id="{{ article.id }}"
+                title="Edit Artikel"
+              >
+                ✏️
+              </button>
+            </div>
             <p class="article-desc">{{ article.snippet }}</p>
             <p class="article-meta">
               🕒 {{ article.read_time_minutes }} menit • {{ article.category }}
             </p>
           </div>
           {% empty %}
-          <div class="article-card">
-            <h4>Cara baca label gizi</h4>
-            <p class="article-desc">
-              Pahami takaran saji dan gula tersembunyi.
-            </p>
-            <p class="article-meta">🕒 6 menit • Nutrisi</p>
-          </div>
-          <div class="article-card">
-            <h4>Simpan sayur tanpa kulkas besar</h4>
-            <p class="article-desc">Trik lembap-kering untuk kamar kos.</p>
-            <p class="article-meta">🕒 4 menit • Anti-sisa</p>
-          </div>
-          <div class="article-card">
-            <h4>Protein murah selain ayam</h4>
-            <p class="article-desc">Tempe, tahu, telur, dan kacang-kacangan.</p>
-            <p class="article-meta">🕒 5 menit • Anggaran</p>
-          </div>
+          <p class="empty-msg" style="font-size: 0.8rem">
+            Belum ada artikel edukasi.
+          </p>
           {% endfor %}
         </div>
 
