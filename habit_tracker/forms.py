@@ -32,3 +32,9 @@ class EnergyLogForm(forms.ModelForm):
         if minutes < 0:
             raise forms.ValidationError("Waktu fokus tidak boleh bernilai negatif.")
         return minutes
+
+class AddFocusTimeForm(forms.Form):
+    additional_minutes = forms.IntegerField(
+        min_value=1,
+        error_messages={'min_value': 'Durasi fokus minimal 1 menit.'}
+    )

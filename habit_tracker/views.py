@@ -5,7 +5,22 @@ from django.views.decorators.http import require_POST, require_GET
 from django.contrib.auth.decorators import login_required
 from django.utils import timezone
 from .models import Habit, HabitLog, SleepLog, EnergyLog
-from .forms import HabitForm, EnergyLogForm
+from .forms import HabitForm, EnergyLogForm, AddFocusTimeForm
+
+
+def format_minutes(total_minutes):
+    """Mengubah durasi menit menjadi format string 'Xj Ym' atau 'Ym'."""
+    if total_minutes is None:
+        total_minutes = 0
+    hours = total_minutes // 60
+    mins = total_minutes % 60
+    if hours > 0 and mins > 0:
+        return f"{hours}j {mins}m"
+    elif hours > 0:
+        return f"{hours}j"
+    else:
+        return f"{mins}m"
+
 
 @login_required(login_url='/auth/login/')
 def habit_tracker_view(request):
@@ -41,9 +56,9 @@ def get_habits_json(request):
 
     energy_log, _ = EnergyLog.objects.get_or_create(user=request.user, date=today)
     
-    hours = energy_log.focus_minutes // 60
-    mins = energy_log.focus_minutes % 60
-    focus_time_str = f"{hours}j {mins}m" if hours > 0 else f"{mins}m"
+    target_mins = energy_log.focus_minutes
+    logged_mins = energy_log.logged_focus_minutes
+    is_target_reached = logged_mins >= target_mins and target_mins > 0
 
     return JsonResponse({
         'habits': habits_data,
@@ -52,8 +67,11 @@ def get_habits_json(request):
             'completed': completed_count,
             'progress_percent': progress_percent,
             'energy_level': energy_log.energy_level,
-            'focus_minutes': energy_log.focus_minutes,
-            'focus_time_str': focus_time_str,
+            'target_focus_minutes': target_mins,
+            'logged_focus_minutes': logged_mins,
+            'focus_time_str': format_minutes(logged_mins),
+            'target_focus_str': format_minutes(target_mins),
+            'is_target_reached': is_target_reached,
         }
     }, status=200)
 
@@ -101,4 +119,26 @@ def log_energy_ajax(request):
     if form.is_valid():
         form.save()
         return JsonResponse({'message': 'Refleksi energi & fokus berhasil disimpan!'}, status=200)
+    return JsonResponse({'errors': form.errors.get_json_data()}, status=400)
+
+@login_required
+@require_POST
+def add_focus_time_ajax(request):
+    form = AddFocusTimeForm(request.POST)
+    if form.is_valid():
+        today = timezone.now().date()
+        energy_log, _ = EnergyLog.objects.get_or_create(user=request.user, date=today)
+        
+        additional = form.cleaned_data['additional_minutes']
+        energy_log.logged_focus_minutes += additional
+        energy_log.save()
+        
+        is_target_reached = energy_log.logged_focus_minutes >= energy_log.focus_minutes and energy_log.focus_minutes > 0
+        
+        return JsonResponse({
+            'message': f'Berhasil menambah {additional} menit fokus!',
+            'logged_focus_minutes': energy_log.logged_focus_minutes,
+            'focus_time_str': format_minutes(energy_log.logged_focus_minutes),
+            'is_target_reached': is_target_reached,
+        }, status=200)
     return JsonResponse({'errors': form.errors.get_json_data()}, status=400)
