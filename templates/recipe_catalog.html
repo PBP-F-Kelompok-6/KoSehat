@@ -169,7 +169,17 @@ Edukasi - KoSehat{% endblock title %} {% block extra_css %}
       <div class="education-widget-card">
         <div class="widget-header">
           <h3 class="font-serif-heading">Belajar 5 menit</h3>
-          <span class="widget-icon">📖</span>
+          <div class="widget-header-actions">
+            <button
+              type="button"
+              class="btn-add-article-icon"
+              id="btnAddArticle"
+              title="Tambah Artikel Baru"
+            >
+              +
+            </button>
+            <span class="widget-icon">📖</span>
+          </div>
         </div>
         <p class="widget-sub">Pilihan minggu ini</p>
 
@@ -208,7 +218,10 @@ Edukasi - KoSehat{% endblock title %} {% block extra_css %}
     </div>
   </div>
 </div>
-{% include 'recipe_detail_modal.html' %} {% endblock content %}
+
+<!-- prettier-ignore -->
+{% include 'recipe_detail_modal.html' %} {% include 'article_modal.html' %}
+{% endblock content %}
 
 <!-- prettier-ignore -->
 {% block extra_js %}
