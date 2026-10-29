@@ -18,7 +18,7 @@
     </div>
     <div class="header-actions">
       <button class="btn-energy" id="btn-open-energy-modal">
-        ⚡ Catat Energi
+        Catat Energi
       </button>
       <button class="btn-primary" id="btn-open-modal">
         <span>+</span> Tambah kebiasaan
@@ -52,9 +52,17 @@
       <div class="kpi-sub" id="kpi-energy-sub">Tingkat kesegaran fisik</div>
     </div>
     <div class="kpi-card">
-      <div class="kpi-label">Waktu fokus</div>
-      <div class="kpi-val" id="kpi-focus">3j 15m</div>
-      <div class="kpi-sub" id="kpi-focus-sub">Sesi produktif hari ini</div>
+      <div class="kpi-card-focus-header">
+        <div>
+          <div class="kpi-label">Waktu fokus</div>
+          <div class="kpi-val" id="kpi-focus">0m</div>
+          <div class="kpi-sub-target" id="kpi-focus-target-text">Target: 0m</div>
+          <div id="kpi-focus-badge-container"></div>
+        </div>
+        <button class="btn-add-focus-trigger" id="btn-open-add-focus-modal">
+          + Tambah
+        </button>
+      </div>
     </div>
   </div>
 
@@ -133,12 +141,37 @@
         <input type="number" name="energy_level" id="input-energy-level" min="1" max="10" value="8" required style="width: 100%; padding: 8px; border-radius: 8px; border: 1px solid #ccc; margin-top: 4px;">
       </div>
       <div style="margin-bottom: 20px;">
-        <label style="font-size: 0.8rem; font-weight: 600;">Waktu Fokus Belajar (Menit)</label>
+        <label style="font-size: 0.8rem; font-weight: 600;">Target Waktu Fokus Belajar Hari Ini (Menit)</label>
         <input type="number" name="focus_minutes" id="input-focus-minutes" min="0" value="195" required style="width: 100%; padding: 8px; border-radius: 8px; border: 1px solid #ccc; margin-top: 4px;">
       </div>
       <div style="display: flex; justify-content: flex-end; gap: 8px;">
         <button type="button" id="btn-close-energy-modal" style="padding: 8px 16px; border: none; background: #e5e7eb; border-radius: 8px; cursor: pointer;">Batal</button>
         <button type="submit" class="btn-primary">Simpan Refleksi</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Modal Form Tambah Waktu Fokus -->
+<div class="modal-overlay" id="add-focus-modal">
+  <div class="modal-box">
+    <h3>Tambah Sesi Fokus</h3>
+    <p style="font-size: 0.85rem; color: #666; margin-top: 4px;">Masukkan durasi sesi fokus yang baru saja Anda selesaikan.</p>
+    <form id="form-add-focus-time" style="margin-top: 16px;">
+      {% csrf_token %}
+      <div style="margin-bottom: 16px;">
+        <label style="font-size: 0.8rem; font-weight: 600;">Durasi Fokus (Menit)</label>
+        <input type="number" name="additional_minutes" id="input-additional-minutes" min="1" value="25" required style="width: 100%; padding: 8px; border-radius: 8px; border: 1px solid #ccc; margin-top: 4px;">
+      </div>
+      <div style="display: flex; gap: 8px; margin-bottom: 20px;">
+        <button type="button" class="btn-quick-add" onclick="setQuickMinutes(15)" style="padding: 6px 12px; border: 1px solid #ccc; border-radius: 6px; background: #f9fafb; cursor: pointer;">+15m</button>
+        <button type="button" class="btn-quick-add" onclick="setQuickMinutes(25)" style="padding: 6px 12px; border: 1px solid #ccc; border-radius: 6px; background: #f9fafb; cursor: pointer;">+25m</button>
+        <button type="button" class="btn-quick-add" onclick="setQuickMinutes(45)" style="padding: 6px 12px; border: 1px solid #ccc; border-radius: 6px; background: #f9fafb; cursor: pointer;">+45m</button>
+        <button type="button" class="btn-quick-add" onclick="setQuickMinutes(60)" style="padding: 6px 12px; border: 1px solid #ccc; border-radius: 6px; background: #f9fafb; cursor: pointer;">+60m</button>
+      </div>
+      <div style="display: flex; justify-content: flex-end; gap: 8px;">
+        <button type="button" id="btn-close-add-focus-modal" style="padding: 8px 16px; border: none; background: #e5e7eb; border-radius: 8px; cursor: pointer;">Batal</button>
+        <button type="submit" class="btn-primary">Catat Fokus</button>
       </div>
     </form>
   </div>

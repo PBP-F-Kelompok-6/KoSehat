@@ -308,3 +308,51 @@
   background-color: var(--bg-sidebar);
   opacity: 0.95;
 }
+
+/* ==========================================================================
+   FOCUS KPI CARD STYLING
+   ========================================================================== */
+.kpi-card-focus-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.btn-add-focus-trigger {
+  background-color: var(--bg-sidebar-card);
+  color: var(--color-white);
+  border: 1px solid var(--bg-sidebar-card-border);
+  padding: 6px 14px;
+  border-radius: var(--radius-full);
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.2s ease;
+}
+
+.btn-add-focus-trigger:hover {
+  background-color: var(--bg-sidebar);
+  opacity: 0.9;
+}
+
+/* Status Target Reached */
+.target-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background-color: #dcfce7;
+  color: #15803d;
+  font-weight: 700;
+  font-size: 0.75rem;
+  padding: 3px 8px;
+  border-radius: 6px;
+  margin-top: 6px;
+}
+
+.kpi-sub-target {
+  font-size: 0.75rem;
+  color: #6b7280;
+  margin-top: 4px;
+}
