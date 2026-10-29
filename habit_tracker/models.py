@@ -12,7 +12,7 @@ class Habit(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='habits')
     title = models.CharField(max_length=255)
     category = models.CharField(max_length=20, choices=CATEGORY_CHOICES, default='mindfulness')
-    target_value = models.IntegerField(default=1, help_text="Target harian (misal 2000 ml atau 1 kali)")
+    target_value = models.IntegerField(default=1, help_text="Target harian")
     unit = models.CharField(max_length=50, default="kali", help_text="ml, langkah, menit, kali")
     created_at = models.DateTimeField(auto_now_add=True)
 
@@ -33,7 +33,19 @@ class SleepLog(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='sleep_logs')
     date = models.DateField()
     duration_hours = models.FloatField(default=7.5)
-    quality_score = models.IntegerField(default=8) # Scale 1-10
+    quality_score = models.IntegerField(default=8)
 
     class Meta:
         unique_together = ('user', 'date')
+
+class EnergyLog(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='energy_logs')
+    date = models.DateField()
+    energy_level = models.IntegerField(default=8, help_text="Skala 1 - 10")
+    focus_minutes = models.IntegerField(default=195, help_text="Waktu fokus dalam menit")
+
+    class Meta:
+        unique_together = ('user', 'date')
+
+    def __str__(self):
+        return f"Energy {self.energy_level}/10 - {self.user.username} ({self.date})"
