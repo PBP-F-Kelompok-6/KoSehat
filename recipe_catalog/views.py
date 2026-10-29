@@ -117,7 +117,7 @@ def recipe_detail_api(request, recipe_id):
             'description': recipe.description,
             'image_url': recipe.image_url or '/static/images/placeholder-recipe.jpg',
             'prep_time_minutes': recipe.prep_time_minutes,
-            'estimated_cost_formatted': f"Rp{recipe.estimated_cost:,.0f}".replace(',', '.'),
+            'estimated_cost_formatted': recipe.estimated_cost_formatted,
             'protein_grams': recipe.protein_grams,
             'tag': recipe.tag,
             'ingredients': recipe.ingredients,

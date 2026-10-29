@@ -28,6 +28,11 @@ class Recipe(models.Model):
     def __str__(self):
         return self.title
 
+    @property
+    def estimated_cost_formatted(self):
+        """Mengembalikan format Rupiah langsung dari instance ORM Recipe"""
+        return f"Rp{self.estimated_cost:,.0f}".replace(',', '.')
+    
 
 class EducationArticle(models.Model):
     title = models.CharField(max_length=255)
