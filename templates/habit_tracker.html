@@ -17,23 +17,21 @@
       <p class="tracker-subtitle">Catat kebiasaan sederhana dan lihat hubungan antara tidur, hidrasi, serta energi harian.</p>
     </div>
     <div class="header-actions">
+      <button class="btn-energy" id="btn-open-energy-modal">
+        ⚡ Catat Energi
+      </button>
       <button class="btn-primary" id="btn-open-modal">
         <span>+</span> Tambah kebiasaan
       </button>
     </div>
   </header>
 
-  
   <!-- Weekly Calendar Section -->
   <div class="weekly-calendar-section">
-    <!-- Keterangan Bulan (Dinamis via JS) -->
     <h3 class="calendar-month-header" id="calendar-month-label">October</h3>
-    
-    <!-- Strip Kartu Hari (Dinamis via JS) -->
     <div class="day-selector-strip" id="day-selector-strip"></div>
   </div>
 
-  <!-- Garis Pemisah Tipis -->
   <hr class="calendar-divider" />
 
   <!-- KPI Cards -->
@@ -45,35 +43,31 @@
     </div>
     <div class="kpi-card">
       <div class="kpi-label">Kebiasaan selesai</div>
-      <div class="kpi-val" id="kpi-completed">5 / 7</div>
-      <div class="kpi-sub" id="kpi-remaining">2 target belum selesai</div>
+      <div class="kpi-val" id="kpi-completed">0 / 0</div>
+      <div class="kpi-sub" id="kpi-remaining">0 target belum selesai</div>
     </div>
     <div class="kpi-card">
       <div class="kpi-label">Energi pagi</div>
-      <div class="kpi-val">8 / 10</div>
-      <div class="kpi-sub">Lebih baik dari kemarin</div>
+      <div class="kpi-val" id="kpi-energy">8 / 10</div>
+      <div class="kpi-sub" id="kpi-energy-sub">Tingkat kesegaran fisik</div>
     </div>
     <div class="kpi-card">
       <div class="kpi-label">Waktu fokus</div>
-      <div class="kpi-val">3j 15m</div>
-      <div class="kpi-sub">2 sesi tanpa distraksi</div>
+      <div class="kpi-val" id="kpi-focus">3j 15m</div>
+      <div class="kpi-sub" id="kpi-focus-sub">Sesi produktif hari ini</div>
     </div>
   </div>
 
   <!-- Main Body Grid -->
   <div class="tracker-body-grid">
-    <!-- Left: Habit Checklist -->
     <div class="habit-section-card">
       <h3>Kebiasaan hari ini</h3>
       <div class="progress-bar-bg" style="margin: 16px 0;">
-        <div class="progress-bar-fill" id="habit-progress-bar" style="width: 71%;"></div>
+        <div class="progress-bar-fill" id="habit-progress-bar" style="width: 0%;"></div>
       </div>
-      <div id="habit-list-container">
-        <!-- Dinamis dimuat via JavaScript AJAX -->
-      </div>
+      <div id="habit-list-container"></div>
     </div>
 
-    <!-- Right: Health Widgets -->
     <div class="side-widgets-column">
       <div class="side-widget-card">
         <h4>Kualitas tidur</h4>
@@ -123,6 +117,28 @@
       <div style="display: flex; justify-content: flex-end; gap: 8px;">
         <button type="button" id="btn-close-modal" style="padding: 8px 16px; border: none; background: #e5e7eb; border-radius: 8px; cursor: pointer;">Batal</button>
         <button type="submit" class="btn-primary">Simpan</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Modal Form Log Energy -->
+<div class="modal-overlay" id="energy-modal">
+  <div class="modal-box">
+    <h3>Refleksi Energi & Fokus Hari Ini</h3>
+    <form id="form-log-energy" style="margin-top: 16px;">
+      {% csrf_token %}
+      <div style="margin-bottom: 12px;">
+        <label style="font-size: 0.8rem; font-weight: 600;">Tingkat Energi Pagi (Skala 1 - 10)</label>
+        <input type="number" name="energy_level" id="input-energy-level" min="1" max="10" value="8" required style="width: 100%; padding: 8px; border-radius: 8px; border: 1px solid #ccc; margin-top: 4px;">
+      </div>
+      <div style="margin-bottom: 20px;">
+        <label style="font-size: 0.8rem; font-weight: 600;">Waktu Fokus Belajar (Menit)</label>
+        <input type="number" name="focus_minutes" id="input-focus-minutes" min="0" value="195" required style="width: 100%; padding: 8px; border-radius: 8px; border: 1px solid #ccc; margin-top: 4px;">
+      </div>
+      <div style="display: flex; justify-content: flex-end; gap: 8px;">
+        <button type="button" id="btn-close-energy-modal" style="padding: 8px 16px; border: none; background: #e5e7eb; border-radius: 8px; cursor: pointer;">Batal</button>
+        <button type="submit" class="btn-primary">Simpan Refleksi</button>
       </div>
     </form>
   </div>

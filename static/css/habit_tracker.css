@@ -285,3 +285,26 @@
   border-top: 1px solid #e5e7eb;
   margin: 24px 0;
 }
+
+/* ==========================================================================
+   ENERGY BUTTON STYLING
+   ========================================================================== */
+.btn-energy {
+  background-color: var(--bg-sidebar-card);
+  color: var(--color-white);
+  border: 1px solid var(--bg-sidebar-card-border);
+  padding: 10px 18px;
+  border-radius: var(--radius-full);
+  font-weight: 600;
+  font-size: 0.875rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: background-color 0.2s ease, opacity 0.2s ease;
+}
+
+.btn-energy:hover {
+  background-color: var(--bg-sidebar);
+  opacity: 0.95;
+}

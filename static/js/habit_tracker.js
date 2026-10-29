@@ -24,15 +24,57 @@ function escapeHtml(str) {
 
 function showToast(message, type = 'success') {
   const container = document.getElementById('toast-container');
+  if (!container) return;
   const toast = document.createElement('div');
   toast.className = `alert alert-${type}`;
-  toast.style.padding = '12px 20px';
-  toast.style.borderRadius = '8px';
-  toast.style.boxShadow = '0 4px 12px rgba(0,0,0,0.1)';
   toast.innerText = message;
-
   container.appendChild(toast);
   setTimeout(() => toast.remove(), 3000);
+}
+
+function renderWeeklyCalendar() {
+  const today = new Date();
+  const monthNames = [
+    "January", "February", "March", "April", "May", "June",
+    "July", "August", "September", "October", "November", "December"
+  ];
+  const monthLabel = document.getElementById('calendar-month-label');
+  if (monthLabel) {
+    monthLabel.innerText = monthNames[today.getMonth()];
+  }
+
+  const dayOfWeek = today.getDay();
+  const distanceToMonday = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
+  const monday = new Date(today);
+  monday.setDate(today.getDate() + distanceToMonday);
+
+  const dayNamesEng = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+  const stripContainer = document.getElementById('day-selector-strip');
+  if (!stripContainer) return;
+
+  stripContainer.innerHTML = '';
+
+  for (let i = 0; i < 7; i++) {
+    const currentDate = new Date(monday);
+    currentDate.setDate(monday.getDate() + i);
+
+    const isToday =
+      currentDate.getDate() === today.getDate() &&
+      currentDate.getMonth() === today.getMonth() &&
+      currentDate.getFullYear() === today.getFullYear();
+
+    const isOtherMonth = currentDate.getMonth() !== today.getMonth();
+    const dayNumStr = String(currentDate.getDate()).padStart(2, '0');
+
+    const card = document.createElement('div');
+    card.className = `day-card ${isToday ? 'active' : ''} ${isOtherMonth ? 'other-month' : ''}`;
+    card.innerHTML = `
+      <div class="day-name">${dayNamesEng[i]}</div>
+      <div class="day-num">${dayNumStr}</div>
+    `;
+
+    stripContainer.appendChild(card);
+  }
 }
 
 async function loadHabits() {
@@ -41,13 +83,29 @@ async function loadHabits() {
     if (!res.ok) throw new Error('Gagal memuat data');
     const data = await res.json();
 
-    // Render Summary KPIs
-    document.getElementById('kpi-completed').innerText = `${data.summary.completed} / ${data.summary.total}`;
-    document.getElementById('kpi-remaining').innerText = `${data.summary.total - data.summary.completed} target belum selesai`;
-    document.getElementById('habit-progress-bar').style.width = `${data.summary.progress_percent}%`;
+    const kpiCompleted = document.getElementById('kpi-completed');
+    const kpiRemaining = document.getElementById('kpi-remaining');
+    const progressBar = document.getElementById('habit-progress-bar');
+    const kpiEnergy = document.getElementById('kpi-energy');
+    const kpiFocus = document.getElementById('kpi-focus');
 
-    // Render List Kebiasaan
+    if (kpiCompleted) kpiCompleted.innerText = `${data.summary.completed} / ${data.summary.total}`;
+    if (kpiRemaining) kpiRemaining.innerText = `${data.summary.total - data.summary.completed} target belum selesai`;
+    if (progressBar) progressBar.style.width = `${data.summary.progress_percent}%`;
+    
+    if (kpiEnergy && data.summary.energy_level !== undefined) {
+      kpiEnergy.innerText = `${data.summary.energy_level} / 10`;
+      const inputEnergy = document.getElementById('input-energy-level');
+      if (inputEnergy) inputEnergy.value = data.summary.energy_level;
+    }
+    if (kpiFocus && data.summary.focus_time_str) {
+      kpiFocus.innerText = data.summary.focus_time_str;
+      const inputFocus = document.getElementById('input-focus-minutes');
+      if (inputFocus) inputFocus.value = data.summary.focus_minutes;
+    }
+
     const container = document.getElementById('habit-list-container');
+    if (!container) return;
     container.innerHTML = '';
 
     if (data.habits.length === 0) {
@@ -100,90 +158,66 @@ async function deleteHabit(habitId) {
   }
 }
 
-// Modal Toggle Handler
-const modal = document.getElementById('habit-modal');
-document.getElementById('btn-open-modal').onclick = () => modal.classList.add('active');
-document.getElementById('btn-close-modal').onclick = () => modal.classList.remove('active');
-
-// Submit Form Handler
-document.getElementById('form-add-habit').onsubmit = async (e) => {
-  e.preventDefault();
-  const formData = new FormData(e.target);
-  
-  const res = await fetch('/habit-tracker/api/add/', {
-    method: 'POST',
-    headers: { 'X-CSRFToken': getCookie('csrftoken') },
-    body: formData
-  });
-
-  if (res.ok) {
-    showToast('Kebiasaan baru berhasil disimpan!');
-    modal.classList.remove('active');
-    e.target.reset();
-    loadHabits();
-  } else {
-    showToast('Gagal menyimpan kebiasaan', 'error');
-  }
-};
-
-// Initial Load
-document.addEventListener('DOMContentLoaded', loadHabits);
-
-function renderWeeklyCalendar() {
-  const today = new Date();
-
-  // 1. Set Keterangan Bulan Berdasarkan Hari Ini
-  const monthNames = [
-    "January", "February", "March", "April", "May", "June",
-    "July", "August", "September", "October", "November", "December"
-  ];
-  const monthLabel = document.getElementById('calendar-month-label');
-  if (monthLabel) {
-    monthLabel.innerText = monthNames[today.getMonth()];
-  }
-
-  // 2. Hitung Tanggal Hari Senin pada Minggu Berjalan
-  const dayOfWeek = today.getDay(); // 0 = Minggu, 1 = Senin, ..., 6 = Sabtu
-  const distanceToMonday = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
-  const monday = new Date(today);
-  monday.setDate(today.getDate() + distanceToMonday);
-
-  const dayNamesEng = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
-  const stripContainer = document.getElementById('day-selector-strip');
-  if (!stripContainer) return;
-
-  stripContainer.innerHTML = '';
-
-  // 3. Render 7 Hari (Mon - Sun)
-  for (let i = 0; i < 7; i++) {
-    const currentDate = new Date(monday);
-    currentDate.setDate(monday.getDate() + i);
-
-    // Cek Apakah Hari Ini
-    const isToday =
-      currentDate.getDate() === today.getDate() &&
-      currentDate.getMonth() === today.getMonth() &&
-      currentDate.getFullYear() === today.getFullYear();
-
-    // Cek Apakah Berada di Bulan Lain Dibanding Hari Ini
-    const isOtherMonth = currentDate.getMonth() !== today.getMonth();
-
-    const dayNumStr = String(currentDate.getDate()).padStart(2, '0');
-
-    // Buat Elemen Card
-    const card = document.createElement('div');
-    card.className = `day-card ${isToday ? 'active' : ''} ${isOtherMonth ? 'other-month' : ''}`;
-    card.innerHTML = `
-      <div class="day-name">${dayNamesEng[i]}</div>
-      <div class="day-num">${dayNumStr}</div>
-    `;
-
-    stripContainer.appendChild(card);
-  }
-}
-
-// Panggil fungsi saat halaman dimuat
 document.addEventListener('DOMContentLoaded', () => {
   renderWeeklyCalendar();
-  loadHabits(); // Fungsi loadHabits yang sudah ada sebelumnya
+  loadHabits();
+
+  // Modal Habit Form
+  const modalHabit = document.getElementById('habit-modal');
+  const btnOpenHabit = document.getElementById('btn-open-modal');
+  const btnCloseHabit = document.getElementById('btn-close-modal');
+  const formAddHabit = document.getElementById('form-add-habit');
+
+  if (btnOpenHabit && modalHabit) btnOpenHabit.onclick = () => modalHabit.classList.add('active');
+  if (btnCloseHabit && modalHabit) btnCloseHabit.onclick = () => modalHabit.classList.remove('active');
+
+  if (formAddHabit) {
+    formAddHabit.onsubmit = async (e) => {
+      e.preventDefault();
+      const formData = new FormData(e.target);
+      const res = await fetch('/habit-tracker/api/add/', {
+        method: 'POST',
+        headers: { 'X-CSRFToken': getCookie('csrftoken') },
+        body: formData
+      });
+
+      if (res.ok) {
+        showToast('Kebiasaan baru berhasil disimpan!');
+        if (modalHabit) modalHabit.classList.remove('active');
+        e.target.reset();
+        loadHabits();
+      } else {
+        showToast('Gagal menyimpan kebiasaan', 'error');
+      }
+    };
+  }
+
+  // Modal Energy Form
+  const modalEnergy = document.getElementById('energy-modal');
+  const btnOpenEnergy = document.getElementById('btn-open-energy-modal');
+  const btnCloseEnergy = document.getElementById('btn-close-energy-modal');
+  const formLogEnergy = document.getElementById('form-log-energy');
+
+  if (btnOpenEnergy && modalEnergy) btnOpenEnergy.onclick = () => modalEnergy.classList.add('active');
+  if (btnCloseEnergy && modalEnergy) btnCloseEnergy.onclick = () => modalEnergy.classList.remove('active');
+
+  if (formLogEnergy) {
+    formLogEnergy.onsubmit = async (e) => {
+      e.preventDefault();
+      const formData = new FormData(e.target);
+      const res = await fetch('/habit-tracker/api/energy/', {
+        method: 'POST',
+        headers: { 'X-CSRFToken': getCookie('csrftoken') },
+        body: formData
+      });
+
+      if (res.ok) {
+        showToast('Refleksi energi & fokus disimpan!');
+        if (modalEnergy) modalEnergy.classList.remove('active');
+        loadHabits();
+      } else {
+        showToast('Gagal menyimpan refleksi energi', 'error');
+      }
+    };
+  }
 });
