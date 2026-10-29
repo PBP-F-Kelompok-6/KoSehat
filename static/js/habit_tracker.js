@@ -32,6 +32,12 @@ function showToast(message, type = 'success') {
   setTimeout(() => toast.remove(), 3000);
 }
 
+// Fungsi pembantu untuk tombol cepat (+15m, +25m, dll.) pada modal fokus
+function setQuickMinutes(mins) {
+  const input = document.getElementById('input-additional-minutes');
+  if (input) input.value = mins;
+}
+
 function renderWeeklyCalendar() {
   const today = new Date();
   const monthNames = [
@@ -87,7 +93,11 @@ async function loadHabits() {
     const kpiRemaining = document.getElementById('kpi-remaining');
     const progressBar = document.getElementById('habit-progress-bar');
     const kpiEnergy = document.getElementById('kpi-energy');
+
+    // KPI Focus Elements
     const kpiFocus = document.getElementById('kpi-focus');
+    const kpiFocusTargetText = document.getElementById('kpi-focus-target-text');
+    const badgeContainer = document.getElementById('kpi-focus-badge-container');
 
     if (kpiCompleted) kpiCompleted.innerText = `${data.summary.completed} / ${data.summary.total}`;
     if (kpiRemaining) kpiRemaining.innerText = `${data.summary.total - data.summary.completed} target belum selesai`;
@@ -98,10 +108,24 @@ async function loadHabits() {
       const inputEnergy = document.getElementById('input-energy-level');
       if (inputEnergy) inputEnergy.value = data.summary.energy_level;
     }
-    if (kpiFocus && data.summary.focus_time_str) {
-      kpiFocus.innerText = data.summary.focus_time_str;
-      const inputFocus = document.getElementById('input-focus-minutes');
-      if (inputFocus) inputFocus.value = data.summary.focus_minutes;
+
+    // Update KPI Waktu Fokus
+    if (kpiFocus) {
+      kpiFocus.innerText = data.summary.focus_time_str || '0m';
+    }
+
+    if (kpiFocusTargetText) {
+      kpiFocusTargetText.innerText = `Target: ${data.summary.target_focus_str || '0m'}`;
+      const inputFocusTarget = document.getElementById('input-focus-minutes');
+      if (inputFocusTarget) inputFocusTarget.value = data.summary.target_focus_minutes;
+    }
+
+    if (badgeContainer) {
+      if (data.summary.is_target_reached) {
+        badgeContainer.innerHTML = '<span class="target-badge">✓ Target tercapai!</span>';
+      } else {
+        badgeContainer.innerHTML = '';
+      }
     }
 
     const container = document.getElementById('habit-list-container');
@@ -217,6 +241,40 @@ document.addEventListener('DOMContentLoaded', () => {
         loadHabits();
       } else {
         showToast('Gagal menyimpan refleksi energi', 'error');
+      }
+    };
+  }
+
+  // Modal Add Focus Time Form
+  const modalAddFocus = document.getElementById('add-focus-modal');
+  const btnOpenAddFocus = document.getElementById('btn-open-add-focus-modal');
+  const btnCloseAddFocus = document.getElementById('btn-close-add-focus-modal');
+  const formAddFocus = document.getElementById('form-add-focus-time');
+
+  if (btnOpenAddFocus && modalAddFocus) btnOpenAddFocus.onclick = () => modalAddFocus.classList.add('active');
+  if (btnCloseAddFocus && modalAddFocus) btnCloseAddFocus.onclick = () => modalAddFocus.classList.remove('active');
+
+  if (formAddFocus) {
+    formAddFocus.onsubmit = async (e) => {
+      e.preventDefault();
+      const formData = new FormData(e.target);
+      
+      const res = await fetch('/habit-tracker/api/focus/add/', {
+        method: 'POST',
+        headers: { 'X-CSRFToken': getCookie('csrftoken') },
+        body: formData
+      });
+
+      if (res.ok) {
+        const result = await res.json();
+        showToast(result.message || 'Waktu fokus berhasil ditambahkan!');
+        if (modalAddFocus) modalAddFocus.classList.remove('active');
+        e.target.reset();
+        const inputMinutes = document.getElementById('input-additional-minutes');
+        if (inputMinutes) inputMinutes.value = 25;
+        loadHabits();
+      } else {
+        showToast('Gagal menambahkan waktu fokus', 'error');
       }
     };
   }
