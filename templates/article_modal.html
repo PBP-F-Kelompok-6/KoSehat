@@ -1,0 +1,196 @@
+{% load static %}
+
+<!-- Modal Detail Artikel -->
+<div
+  id="articleDetailModal"
+  class="modal-overlay"
+  aria-hidden="true"
+  data-detail-url="{% url 'recipe_catalog:article_detail_api' 0 %}"
+>
+  <div class="modal-card article-detail-card" role="dialog" aria-modal="true">
+    <button
+      type="button"
+      class="btn-modal-close"
+      id="btnCloseArticleDetail"
+      aria-label="Tutup"
+    >
+      <svg
+        width="20"
+        height="20"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2.5"
+      >
+        <line x1="18" y1="6" x2="6" y2="18"></line>
+        <line x1="6" y1="6" x2="18" y2="18"></line>
+      </svg>
+    </button>
+
+    <div id="articleModalLoading" class="modal-state-loading">
+      <div class="spinner"></div>
+      <p>Memuat artikel...</p>
+    </div>
+
+    <div id="articleModalBody" class="modal-body-content" style="display: none">
+      <span id="articleCategoryBadge" class="badge-pill badge-flax"></span>
+      <h2
+        id="articleModalTitle"
+        class="modal-recipe-title"
+        style="margin-top: 10px"
+      ></h2>
+      <div class="modal-meta-row" style="margin-bottom: 16px">
+        <span>🕒 <strong id="articleReadTime"></strong> mnt baca</span>
+        <span>•</span>
+        <span id="articleDate"></span>
+      </div>
+
+      <div class="modal-section-box full-width" style="margin-bottom: 16px">
+        <p
+          id="articleSnippet"
+          style="font-weight: 600; color: #313e1a; font-size: 0.9rem"
+        ></p>
+      </div>
+
+      <div id="articleContentBody" class="article-rich-content"></div>
+
+      <div class="modal-footer-actions">
+        <button
+          type="button"
+          class="btn-action btn-sekunder"
+          id="btnCloseArticleDetailFooter"
+        >
+          Tutup
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Form Artikel (create-update) -->
+<div
+  id="articleFormModal"
+  class="modal-overlay"
+  aria-hidden="true"
+  data-create-url="{% url 'recipe_catalog:article_create_api' %}"
+  data-update-url="{% url 'recipe_catalog:article_update_api' 0 %}"
+  data-delete-url="{% url 'recipe_catalog:article_delete_api' 0 %}"
+>
+  <div class="modal-card article-form-card" role="dialog" aria-modal="true">
+    <button
+      type="button"
+      class="btn-modal-close"
+      id="btnCloseArticleForm"
+      aria-label="Tutup"
+    >
+      <svg
+        width="20"
+        height="20"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2.5"
+      >
+        <line x1="18" y1="6" x2="6" y2="18"></line>
+        <line x1="6" y1="6" x2="18" y2="18"></line>
+      </svg>
+    </button>
+
+    <h2
+      id="articleFormModalTitle"
+      class="modal-recipe-title"
+      style="margin-bottom: 20px"
+    >
+      Tambah Artikel Edukasi
+    </h2>
+
+    <form id="articleForm" class="kosehat-form">
+      <input type="hidden" id="articleIdInput" value="" />
+
+      <div class="form-group">
+        <label for="articleTitleInput" class="form-label">JUDUL ARTIKEL</label>
+        <input
+          type="text"
+          id="articleTitleInput"
+          class="form-control-kosehat"
+          placeholder="Contoh: Protein Murah Selain Ayam"
+          required
+        />
+      </div>
+
+      <div class="form-row-2">
+        <div class="form-group">
+          <label for="articleCategoryInput" class="form-label">KATEGORI</label>
+          <select id="articleCategoryInput" class="form-control-kosehat">
+            <option value="Nutrisi">Nutrisi</option>
+            <option value="Anti-sisa">Anti-sisa</option>
+            <option value="Anggaran">Anggaran</option>
+            <option value="Gaya Hidup">Gaya Hidup</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="articleReadTimeInput" class="form-label"
+            >ESTIMASI BACA (MENIT)</label
+          >
+          <input
+            type="number"
+            id="articleReadTimeInput"
+            class="form-control-kosehat"
+            min="1"
+            max="60"
+            value="5"
+            required
+          />
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="articleSnippetInput" class="form-label"
+          >RINGKASAN SINGKAT (SNIPPET)</label
+        >
+        <input
+          type="text"
+          id="articleSnippetInput"
+          class="form-control-kosehat"
+          placeholder="Ringkasan 1-2 kalimat..."
+          maxlength="300"
+          required
+        />
+      </div>
+
+      <div class="form-group">
+        <label for="articleContentInput" class="form-label"
+          >KONTEN LENGKAP</label
+        >
+        <textarea
+          id="articleContentInput"
+          class="form-control-kosehat textarea-kosehat"
+          rows="5"
+          placeholder="Tuliskan isi edukasi selengkapnya..."
+          required
+        ></textarea>
+      </div>
+
+      <div class="modal-footer-actions">
+        <button
+          type="button"
+          class="btn-action btn-danger"
+          id="btnDeleteArticle"
+          style="display: none; margin-right: auto"
+        >
+          Hapus
+        </button>
+        <button
+          type="button"
+          class="btn-action btn-ghost"
+          id="btnCancelArticleForm"
+        >
+          Batal
+        </button>
+        <button type="submit" class="btn-action btn-primer" id="btnSaveArticle">
+          Simpan Artikel
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
