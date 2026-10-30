@@ -4,7 +4,7 @@ from . import views
 app_name = 'recipe_catalog'
 
 urlpatterns = [
-    path('', views.recipe_catalog_view, name='katalog'),
+    path('', views.recipe_catalog_view, name='catalog'),
     path('api/filter/', views.recipe_filter_ajax, name='filter_ajax'),
     path('<int:recipe_id>/', views.recipe_detail_view, name='recipe_detail'),
     path('api/detail/<int:recipe_id>/', views.recipe_detail_api, name='recipe_detail_api'),
