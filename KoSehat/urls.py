@@ -22,4 +22,6 @@ from KoSehat.views import landing_page
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('', landing_page, name='landing_page'),
+    path('auth/', include('user_profile.urls')),
+    path('catalog/', include('recipe_catalog.urls')),
 ]
