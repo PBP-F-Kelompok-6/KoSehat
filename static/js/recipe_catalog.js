@@ -214,10 +214,10 @@ let currentActiveRecipeId = null;
     btnBookmarkModal.addEventListener('click', () => {
       if (!currentActiveRecipeId) return;
 
-      if (!detailBookmarkTemplate) {
+      if (!bookmarkUrlTemplate) {
         console.error("Template bookmark-url tidak ditemukan di HTML modal.");
         return;
-        }
+      }
 
     // Replace dummy '0' dengan recipeId aktual
     const bookmarkUrl = bookmarkUrlTemplate.replace("0", currentActiveRecipeId);
