@@ -19,7 +19,7 @@ from dotenv import load_dotenv
 
 load_dotenv(BASE_DIR / '.env')
 USDA_API_KEY = os.environ.get('USDA_API_KEY') or 'DEMO_KEY'
-
+SPOONACULAR_API_KEY = 'fad7be18939e4bb18c2c714a33080a66'
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.0/howto/deployment/checklist/
@@ -50,6 +50,9 @@ INSTALLED_APPS = [
     'meal_planner',
     'django_cas_ng',
     'user_profile',
+
+    # Modul KoSehat
+    'recipe_catalog',
 ]
 
 MIDDLEWARE = [
