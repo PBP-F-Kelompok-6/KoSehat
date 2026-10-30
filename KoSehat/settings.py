@@ -18,7 +18,7 @@ import os
 from dotenv import load_dotenv
 
 load_dotenv(BASE_DIR / '.env')
-USDA_API_KEY = os.environ.get('USDA_API_KEY', '')
+USDA_API_KEY = os.environ.get('USDA_API_KEY') or 'DEMO_KEY'
 
 
 # Quick-start development settings - unsuitable for production
