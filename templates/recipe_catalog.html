@@ -123,10 +123,7 @@ Edukasi - KoSehat{% endblock title %} {% block extra_css %}
       <!-- Grid Resep -->
       <div class="recipe-cards-grid" id="recipeGrid">
         {% for recipe in recipes|slice:":6" %}
-        <div
-          class="recipe-card-item {% if recipe.is_bookmarked %}bookmarked{% endif %}"
-          data-recipe-id="{{ recipe.id }}"
-        >
+        <div class="recipe-card-item" data-recipe-id="{{ recipe.id }}">
           <img
             src="{{ recipe.image_url }}"
             alt="{{ recipe.title }}"
@@ -147,13 +144,11 @@ Edukasi - KoSehat{% endblock title %} {% block extra_css %}
         {% endfor %}
       </div>
 
-      <!-- Pagination -->
-      <div class="pagination-wrapper">
-        <button class="page-nav">‹</button>
-        <button class="page-num active">1</button>
-        <button class="page-num">2</button>
-        <button class="page-num">3</button>
-        <button class="page-nav">›</button>
+      <!-- Pagination Container -->
+      <div class="pagination-wrapper" id="paginationWrapper">
+        <button class="page-nav disabled" data-page="prev">‹</button>
+        <button class="page-num active" data-page="1">1</button>
+        <button class="page-nav disabled" data-page="next">›</button>
       </div>
     </div>
 

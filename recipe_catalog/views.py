@@ -3,6 +3,7 @@ from django.shortcuts import render, get_object_or_404, redirect
 from django.http import JsonResponse, HttpResponseForbidden
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.views.decorators.http import require_POST, require_GET
+from django.core.paginator import Paginator
 from .models import Recipe, EducationArticle
 from .forms import RecipeForm, EducationArticleForm
 from .services import get_or_fetch_recipes
@@ -20,7 +21,7 @@ def is_editor_or_superuser(user):
     )
 
 def recipe_catalog_view(request):
-    recipes = get_or_fetch_recipes(number=12)
+    recipes = get_or_fetch_recipes(number=24)
     
     editor_choice = recipes[0] if recipes else None
     display_recipes = recipes[1:7] if len(recipes) > 1 else recipes
@@ -43,15 +44,21 @@ def recipe_filter_ajax(request):
     tag_filter = request.GET.get('tag', '').strip()
     max_cost = request.GET.get('max_cost', None)
     max_time = request.GET.get('max_time', None)
+    page_number = request.GET.get('page', 1)
 
+    # Ambil data resep (cukup untuk beberapa halaman)
     recipes = get_or_fetch_recipes(
         query=search_query,
         tag=tag_filter,
         max_ready_time=max_time,
         max_price=max_cost,
-        number=12
+        number=24
     )
     
+    # Bungkus dengan Paginator (6 resep per halaman)
+    paginator = Paginator(recipes, 6)
+    page_obj = paginator.get_page(page_number)
+
     recipes_data = [
         {
             'id': r.id,
@@ -65,10 +72,20 @@ def recipe_filter_ajax(request):
             'protein_grams': r.protein_grams,
             'tag': r.tag,
         }
-        for r in recipes
+        for r in page_obj
     ]
 
-    return JsonResponse({'status': 'success', 'recipes': recipes_data})
+    return JsonResponse({
+        'status': 'success',
+        'recipes': recipes_data,
+        'pagination': {
+            'current_page': page_obj.number,
+            'total_pages': paginator.num_pages,
+            'has_next': page_obj.has_next(),
+            'has_previous': page_obj.has_previous(),
+            'total_count': paginator.count,
+        }
+    })
 
 @login_required
 @user_passes_test(is_admin)

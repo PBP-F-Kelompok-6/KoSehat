@@ -3,6 +3,7 @@ const searchInput = document.getElementById("recipeSearchInput");
 const recipeGrid = document.getElementById("recipeGrid");
 const recipeCount = document.getElementById("recipeCount");
 const filterBtns = document.querySelectorAll(".pill-btn");
+const paginationWrapper = document.getElementById("paginationWrapper");
 
 const filterContainer = document.getElementById("filterContainer");
 const baseUrl = filterContainer ? filterContainer.getAttribute("data-url") : "";
@@ -50,12 +51,16 @@ function replaceUrlId(templateUrl, targetId) {
   return templateUrl.replace(/\/0(\/|\?|$)/, `/${targetId}$1`);
 }
 
-function fetchFilteredRecipes(query = "", tag = "") {
+let currentPage = 1;
+let activeTag = "";
+
+function fetchFilteredRecipes(query = "", tag = "", page = 1) {
     if (!baseUrl) {
         console.error("Gagal mengambil data-url dari HTML.");
         return;
     }
 
+    currentPage = page;
     const url = `${baseUrl}?q=${encodeURIComponent(query)}&tag=${encodeURIComponent(tag)}`;
     fetch(url)
     .then((res) => res.json())
@@ -93,27 +98,85 @@ function renderRecipes(recipes) {
     .join("");
 }
 
+function renderPagination(pagination) {
+    if (!paginationWrapper) return;
+
+    if (recipeCount) {
+      recipeCount.textContent = pagination.total_count || 0;
+    }
+
+    const { current_page, total_pages, has_previous, has_next } = pagination;
+
+    if (total_pages <= 1) {
+      paginationWrapper.innerHTML = "";
+      return;
+    }
+
+    let html = `
+      <button class="page-nav ${!has_previous ? 'disabled' : ''}" data-page="${current_page - 1}" ${!has_previous ? 'disabled' : ''}>‹</button>
+    `;
+
+    for (let i = 1; i <= total_pages; i++) {
+      html += `
+        <button class="page-num ${i === current_page ? 'active' : ''}" data-page="${i}">${i}</button>
+      `;
+    }
+
+    html += `
+      <button class="page-nav ${!has_next ? 'disabled' : ''}" data-page="${current_page + 1}" ${!has_next ? 'disabled' : ''}>›</button>
+    `;
+
+    paginationWrapper.innerHTML = html;
+  }
+
+  // Event Listener Klik Tombol Pagination
+  if (paginationWrapper) {
+    paginationWrapper.addEventListener("click", function (e) {
+      const btn = e.target.closest("button[data-page]");
+      if (!btn || btn.disabled || btn.classList.contains("disabled")) return;
+
+      const targetPage = parseInt(btn.dataset.page, 10);
+      if (targetPage && targetPage !== currentPage) {
+        fetchFilteredRecipes(
+          searchInput ? searchInput.value : "",
+          activeTag,
+          targetPage
+        );
+        // Scroll halus kembali ke header grid resep
+        const sectionHeader = document.querySelector(".recipes-main-content");
+        if (sectionHeader) {
+          sectionHeader.scrollIntoView({ behavior: "smooth", block: "start" });
+        }
+      }
+    });
+  }
+
 let timeout = null;
 if (searchInput) {
     searchInput.addEventListener("input", function () {
-    clearTimeout(timeout);
-    timeout = setTimeout(() => {
-        fetchFilteredRecipes(searchInput.value);
-    }, 300);
+      clearTimeout(timeout);
+      timeout = setTimeout(() => {
+        fetchFilteredRecipes(searchInput.value, activeTag, 1);
+      }, 300);
     });
-}
+  }
 
-filterBtns.forEach((btn) => {
+// Filter Pills Handler (Reset ke halaman 1)
+  filterBtns.forEach((btn) => {
     btn.addEventListener("click", function () {
-    filterBtns.forEach((b) => b.classList.remove("active"));
-    this.classList.add("active");
-    const tag = this.dataset.tag || "";
-    fetchFilteredRecipes(
+      filterBtns.forEach((b) => b.classList.remove("active"));
+      this.classList.add("active");
+
+      const tag = this.dataset.tag || "";
+      activeTag = tag === "Semua" ? "" : tag;
+
+      fetchFilteredRecipes(
         searchInput ? searchInput.value : "",
-        tag === "Semua" ? "" : tag,
-    );
+        activeTag,
+        1
+      );
     });
-});
+  });
 
 let currentActiveRecipeId = null;
 
