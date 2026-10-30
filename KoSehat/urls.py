@@ -16,12 +16,10 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, include
-from django.urls import path
-
-from KoSehat.views import landing_page
+from django.shortcuts import redirect
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('', landing_page, name='landing_page'),
+    path('', lambda request: redirect('user_profile:login'), name='home_redirect'),
     path('auth/', include('user_profile.urls')),
 ]
