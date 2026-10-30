@@ -381,7 +381,7 @@ let currentActiveRecipeId = null;
         : articleCreateUrl;
 
       if (!targetUrl) {
-        console.error("❌ [KoSehat] Target URL submit artikel tidak valid.");
+        console.error("[KoSehat] Target URL submit artikel tidak valid.");
         return;
       }
 
@@ -402,6 +402,12 @@ let currentActiveRecipeId = null;
         body: JSON.stringify(payload),
       })
         .then((res) => res.json())
+        .then((res) => {
+        if (res.status === 403) {
+          throw new Error("Anda tidak memiliki izin (Editor/Superuser) untuk melakukan tindakan ini.");
+        }
+        return res.json();
+      })
         .then((data) => {
           if (data.status === "success") {
             closeArticleModals();
