@@ -1,0 +1,115 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}Meal Planner - KoSehat{% endblock title %}
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/meal_planner.css' %}" />
+{% endblock extra_css %}
+
+{% block content %}
+<div class="mp-page">
+  <h2 class="font-serif-heading mp-title">Meal Planner & Eco-Diet</h2>
+  <p class="mp-subtitle">Rencanakan menu sehat, hemat, dan minim kemasan plastik.</p>
+
+  <!-- Navigasi minggu -->
+  <div class="mp-week-nav">
+    <a class="mp-btn mp-btn-light" href="?start={{ prev_start }}">&larr; Minggu lalu</a>
+    <div class="mp-week-label">
+      <strong>{{ start|date:"j M" }} &ndash; {{ end|date:"j M Y" }}</strong>
+      {% if not is_current_week %}<a class="mp-btn mp-btn-small" href="?start={{ current_start }}">Minggu ini</a>{% endif %}
+    </div>
+    <a class="mp-btn mp-btn-light" href="?start={{ next_start }}">Minggu depan &rarr;</a>
+  </div>
+
+  <!-- Ringkasan mingguan -->
+  <div class="mp-stats">
+    <div class="mp-card mp-stat">
+      <span class="mp-stat-icon">🍽️</span>
+      <div class="mp-stat-body">
+        <span class="mp-stat-label">Menu terjadwal</span>
+        <span class="mp-stat-value">{{ week_meal_count }}</span>
+      </div>
+    </div>
+    <div class="mp-card mp-stat">
+      <span class="mp-stat-icon">💰</span>
+      <div class="mp-stat-body">
+        <span class="mp-stat-label">Total biaya</span>
+        <span class="mp-stat-value">Rp {{ week_cost|floatformat:"0g" }}</span>
+      </div>
+    </div>
+    <div class="mp-card mp-card-eco mp-stat">
+      <span class="mp-stat-icon">🍳</span>
+      <div class="mp-stat-body">
+        <span class="mp-stat-label">Masak sendiri &bull; {{ homemade_percent }}%</span>
+        <span class="mp-stat-value">{{ week_homemade_count }}</span>
+        <div class="mp-meter"><div class="mp-meter-fill" style="width: {{ homemade_percent }}%"></div></div>
+      </div>
+    </div>
+    <div class="mp-card mp-stat">
+      <span class="mp-stat-icon">🧃</span>
+      <div class="mp-stat-body">
+        <span class="mp-stat-label">Kemasan plastik</span>
+        <span class="mp-stat-value">{{ week_packaging_used }}</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Kalimat penyemangat -->
+  <div class="mp-eco-banner">
+    <img class="mp-eco-img" src="{% static eco_image %}" alt="" />
+    <p>{{ eco_message }}</p>
+  </div>
+
+  <!-- Jadwal per hari -->
+  <div class="mp-week-grid">
+    {% for day in days %}
+    <section class="mp-card mp-day {% if day.is_today %}is-today{% endif %} {% if day.is_past %}is-past{% endif %}">
+      <header class="mp-day-header">
+        <div>
+          <h3>{{ day.label }}{% if day.is_today %} <span class="mp-today-chip">Hari ini</span>{% endif %}</h3>
+          <small class="mp-muted">{{ day.date|date:"j M" }}</small>
+        </div>
+        <a class="mp-btn mp-btn-small" href="{% url 'meal_planner:meal_create' %}?date={{ day.date|date:'Y-m-d' }}">+ Tambah</a>
+      </header>
+
+      {% for meal in day.meals %}
+      <div class="mp-meal mp-type-{{ meal.meal_type }}">
+        <span class="mp-meal-type">{{ meal.get_meal_type_display }}</span>
+        <p class="mp-meal-name">{{ meal.name }}</p>
+        <small class="mp-muted">
+          Rp {{ meal.estimated_cost|floatformat:"0g" }}{% if meal.calories %} &bull; {{ meal.calories }} kkal{% endif %}
+        </small>
+        {% if meal.is_homemade or meal.packaging_used %}
+        <div class="mp-badges">
+          {% if meal.is_homemade %}<span class="mp-badge">Masak sendiri</span>{% endif %}
+          {% if meal.packaging_used %}<span class="mp-badge mp-badge-muted">{{ meal.packaging_used }} kemasan plastik</span>{% endif %}
+        </div>
+        {% endif %}
+        {% if meal.notes %}<p class="mp-meal-note">{{ meal.notes }}</p>{% endif %}
+        <div class="mp-meal-actions">
+          <a class="mp-link-edit" href="{% url 'meal_planner:meal_update' meal.pk %}">Ubah</a>
+          <form method="post" action="{% url 'meal_planner:meal_delete' meal.pk %}" onsubmit="return confirm('Hapus menu ini?');">
+            {% csrf_token %}
+            <button type="submit" class="mp-link-danger">Hapus</button>
+          </form>
+        </div>
+      </div>
+      {% empty %}
+      <div class="mp-empty-state">
+        <span class="mp-empty-icon">🍽️</span>
+        {% if day.is_past %}
+        <p>Tidak ada menu tercatat.</p>
+        {% else %}
+        <p>Belum ada rencana makan.</p>
+        <a class="mp-link-edit" href="{% url 'meal_planner:meal_create' %}?date={{ day.date|date:'Y-m-d' }}">Yuk tambah menu pertama</a>
+        {% endif %}
+      </div>
+      {% endfor %}
+
+      {% if day.meals %}
+      <footer class="mp-day-total">Total: Rp {{ day.cost|floatformat:"0g" }}</footer>
+      {% endif %}
+    </section>
+    {% endfor %}
+  </div>
+</div>
+{% endblock content %}
