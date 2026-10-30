@@ -463,4 +463,27 @@ let currentActiveRecipeId = null;
   if (btnCloseArticleDetailFooter) btnCloseArticleDetailFooter.addEventListener("click", closeArticleModals);
   if (btnCloseArticleForm) btnCloseArticleForm.addEventListener("click", closeArticleModals);
   if (btnCancelArticleForm) btnCancelArticleForm.addEventListener("click", closeArticleModals);
+  
+  const modeTabs = document.querySelectorAll(".mode-tab");
+  const catalogContainer = document.getElementById("catalogContainer");
+
+  if (modeTabs.length > 0) {
+    modeTabs.forEach((tab) => {
+      tab.addEventListener("click", function (e) {
+        e.preventDefault();
+        
+        // Pindah class 'active' ke tombol yang baru diklik
+        modeTabs.forEach((t) => t.classList.remove("active"));
+        this.classList.add("active");
+
+        // Ambil nilai data-mode (semua / resep / edukasi)
+        const selectedMode = this.dataset.mode || "semua";
+
+        // Ubah attribute data-view-mode di container utama
+        if (catalogContainer) {
+          catalogContainer.setAttribute("data-view-mode", selectedMode);
+        }
+      });
+    });
+  }
 });
