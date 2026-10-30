@@ -1,14 +1,66 @@
-import json
 from datetime import timedelta
-from django.shortcuts import render, get_object_or_404
-from django.http import JsonResponse
-from django.views.decorators.http import require_POST, require_GET
-from django.contrib.auth.decorators import login_required
-from django.utils import timezone
-from .models import Habit, HabitLog, SleepLog, EnergyLog, UserStreak
-from .forms import HabitForm, EnergyLogForm, AddFocusTimeForm, SleepSettingForm
 
-DAY_INITIALS = {0: 'S', 1: 'S', 2: 'R', 3: 'K', 4: 'J', 5: 'S', 6: 'M'}
+from django.contrib.auth.decorators import login_required
+from django.http import JsonResponse
+from django.shortcuts import get_object_or_404, render
+from django.utils import timezone
+from django.views.decorators.http import require_GET, require_POST
+
+from .forms import (
+    AddFocusTimeForm,
+    AddHabitProgressForm,
+    EnergyLogForm,
+    HabitForm,
+    HydrationForm,
+    SleepSettingForm,
+)
+from .models import (
+    EnergyLog,
+    Habit,
+    HabitLog,
+    HydrationLog,
+    SleepLog,
+    UserStreak,
+)
+
+
+DAY_INITIALS = {
+    0: "Sen",
+    1: "Sel",
+    2: "Rab",
+    3: "Kam",
+    4: "Jum",
+    5: "Sab",
+    6: "Min",
+}
+
+
+def format_minutes(total_minutes):
+    total_minutes = max(total_minutes or 0, 0)
+    hours = total_minutes // 60
+    minutes = total_minutes % 60
+
+    if hours and minutes:
+        return f"{hours}j {minutes}m"
+    if hours:
+        return f"{hours}j"
+    return f"{minutes}m"
+
+
+def get_selected_date(request):
+    raw_date = request.GET.get("date")
+
+    if not raw_date:
+        return timezone.localdate()
+
+    try:
+        return timezone.datetime.strptime(
+            raw_date,
+            "%Y-%m-%d",
+        ).date()
+    except ValueError:
+        return timezone.localdate()
+
 
 def get_or_update_user_streak(user, today):
     streak_obj, created = UserStreak.objects.get_or_create(user=user)
@@ -25,22 +77,24 @@ def get_or_update_user_streak(user, today):
     current_streak = streak_obj.current_streak
     best_streak = streak_obj.best_streak
 
-    # Evaluasi setiap hari dari last_checked_date sampai kemarin (today - 1 hari)
     while check_date < today:
-        habits_on_date = Habit.objects.filter(user=user, created_at__date__lte=check_date)
-        
-        if habits_on_date.exists():
-            total_habits = habits_on_date.count()
-            completed_logs = HabitLog.objects.filter(
+        habits_on_date = Habit.objects.filter(
+            user=user,
+            created_at__date__lte=check_date,
+        )
+
+        if not habits_on_date.exists():
+            current_streak = 0
+        else:
+            completed_count = HabitLog.objects.filter(
                 habit__in=habits_on_date,
                 date=check_date,
-                is_completed=True
+                is_completed=True,
             ).count()
 
-            if completed_logs >= total_habits and total_habits > 0:
+            if completed_count == habits_on_date.count():
                 current_streak += 1
-                if current_streak > best_streak:
-                    best_streak = current_streak
+                best_streak = max(best_streak, current_streak)
             else:
                 current_streak = 0
 
@@ -53,210 +107,465 @@ def get_or_update_user_streak(user, today):
 
     return streak_obj
 
-def format_minutes(total_minutes):
-    """Mengubah durasi menit menjadi format string 'Xj Ym' atau 'Ym'."""
-    if total_minutes is None or total_minutes < 0:
-        total_minutes = 0
-    hours = total_minutes // 60
-    mins = total_minutes % 60
-    if hours > 0 and mins > 0:
-        return f"{hours}j {mins}m"
-    elif hours > 0:
-        return f"{hours}j"
-    else:
-        return f"{mins}m"
 
-
-@login_required(login_url='/auth/login/')
+@login_required(login_url="/auth/login/")
 def habit_tracker_view(request):
-    return render(request, 'habit_tracker.html')
+    return render(request, "habit_tracker.html")
+
 
 @login_required
 @require_GET
 def get_habits_json(request):
-    today = timezone.now().date()
-    habits = Habit.objects.filter(user=request.user)
-    
+    selected_date = get_selected_date(request)
+    user = request.user
+
+    habits = Habit.objects.filter(
+        user=user,
+        is_active=True,
+    ).order_by("created_at")
+
     habits_data = []
     completed_count = 0
 
     for habit in habits:
-        log, _ = HabitLog.objects.get_or_create(habit=habit, date=today)
+        log, _ = HabitLog.objects.get_or_create(
+            habit=habit,
+            date=selected_date,
+        )
+
         if log.is_completed:
             completed_count += 1
 
-        habits_data.append({
-            'id': habit.id,
-            'title': habit.title,
-            'category': habit.category,
-            'target_value': habit.target_value,
-            'unit': habit.unit,
-            'current_value': log.current_value,
-            'is_completed': log.is_completed,
-            'logged_time': log.logged_time.strftime('%H.%M') if log.logged_time else ''
-        })
+        habits_data.append(
+            {
+                "id": habit.id,
+                "title": habit.title,
+                "category": habit.category,
+                "target_value": habit.target_value,
+                "unit": habit.unit,
+                "current_value": log.current_value,
+                "progress_percent": log.progress_percent,
+                "is_completed": log.is_completed,
+                "logged_time": (
+                    log.logged_time.strftime("%H.%M")
+                    if log.logged_time
+                    else ""
+                ),
+            }
+        )
 
     total_habits = len(habits_data)
-    progress_percent = int((completed_count / total_habits * 100)) if total_habits > 0 else 0
+    progress_percent = (
+        int(completed_count / total_habits * 100)
+        if total_habits
+        else 0
+    )
 
-    streak_obj = get_or_update_user_streak(request.user, today)
-    energy_log, _ = EnergyLog.objects.get_or_create(user=request.user, date=today)
-    
-    target_mins = energy_log.focus_minutes
-    logged_mins = energy_log.logged_focus_minutes
-    is_target_reached = logged_mins >= target_mins and target_mins > 0
+    streak_obj = get_or_update_user_streak(
+        user,
+        timezone.localdate(),
+    )
 
-    # Data Kualitas Tidur 7 Malam Terakhir
-    default_sample_durations = [390, 430, 400, 460, 420, 480, 444] # Data dummy variatif untuk 7 malam
+    energy_log, _ = EnergyLog.objects.get_or_create(
+        user=user,
+        date=selected_date,
+    )
+
+    hydration_log, _ = HydrationLog.objects.get_or_create(
+        user=user,
+        date=selected_date,
+        defaults={"target_ml": 2500},
+    )
+
+    if hydration_log.target_ml != 2500:
+        hydration_log.target_ml = 2500
+        hydration_log.save(update_fields=["target_ml", "updated_at"])
+
     sleep_bars = []
-    
-    target_sleep_hours = 7.5
-    latest_sleep_log, _ = SleepLog.objects.get_or_create(user=request.user, date=today)
+    latest_sleep_log, _ = SleepLog.objects.get_or_create(
+        user=user,
+        date=selected_date,
+    )
+
     target_sleep_hours = latest_sleep_log.target_hours
 
-    for i in range(6, -1, -1):
-        day_date = today - timedelta(days=i)
-        s_log, created = SleepLog.objects.get_or_create(user=request.user, date=day_date)
-        
-        if created:
-            s_log.duration_minutes = default_sample_durations[6 - i]
-            s_log.target_hours = target_sleep_hours
-            s_log.save()
+    for index in range(6, -1, -1):
+        day_date = selected_date - timedelta(days=index)
+        sleep_log = SleepLog.objects.filter(
+            user=user,
+            date=day_date,
+        ).first()
 
-        # Hitung tinggi bar dalam persentase
-        max_scale_mins = max(target_sleep_hours * 60 * 1.25, 600) # Skala maksimal sekitar 10 jam
-        height_pct = max(10, min(100, int((s_log.duration_minutes / max_scale_mins) * 100)))
+        if sleep_log is None:
+            duration_minutes = 0
+            day_target_sleep_hours = target_sleep_hours
+        else:
+            duration_minutes = sleep_log.duration_minutes
+            day_target_sleep_hours = sleep_log.target_hours
 
-        sleep_bars.append({
-            'date': day_date.strftime('%Y-%m-%d'),
-            'day_initial': DAY_INITIALS[day_date.weekday()],
-            'duration_minutes': s_log.duration_minutes,
-            'duration_str': format_minutes(s_log.duration_minutes),
-            'height_percent': height_pct,
-            'is_latest': (i == 0)
-        })
+        max_scale_minutes = max(
+            day_target_sleep_hours * 60 * 1.25,
+            600,
+        )
 
-    latest_duration_str = format_minutes(latest_sleep_log.duration_minutes)
-    target_hours_formatted = f"{latest_sleep_log.target_hours:g}".replace('.', ',')
+        height_percent = max(
+            0,
+            min(
+                100,
+                int(
+                    duration_minutes
+                    / max_scale_minutes
+                    * 100
+                ),
+            ),
+        )
 
-    return JsonResponse({
-        'habits': habits_data,
-        'summary': {
-            'total': total_habits,
-            'completed': completed_count,
-            'progress_percent': progress_percent,
-            'streak': streak_obj.current_streak,
-            'best_streak': streak_obj.best_streak,
-            'energy_level': energy_log.energy_level,
-            'target_focus_minutes': target_mins,
-            'logged_focus_minutes': logged_mins,
-            'focus_time_str': format_minutes(logged_mins),
-            'target_focus_str': format_minutes(target_mins),
-            'is_target_reached': is_target_reached,
-            'sleep': {
-                'last_night_str': latest_duration_str,
-                'last_night_hours': latest_sleep_log.duration_minutes // 60,
-                'last_night_mins': latest_sleep_log.duration_minutes % 60,
-                'target_hours': latest_sleep_log.target_hours,
-                'target_str': f"{target_hours_formatted} jam",
-                'bars': sleep_bars,
+        sleep_bars.append(
+            {
+                "date": day_date.isoformat(),
+                "day_initial": DAY_INITIALS[day_date.weekday()],
+                "duration_minutes": duration_minutes,
+                "duration_str": format_minutes(
+                    duration_minutes,
+                ),
+                "height_percent": height_percent,
+                "is_latest": index == 0,
             }
+        )
+
+    current_date = timezone.localdate()
+    monday = current_date - timedelta(days=current_date.weekday())
+    weekly_consistency = []
+
+    for day_offset in range(7):
+        consistency_date = monday + timedelta(days=day_offset)
+        habits_for_day = Habit.objects.filter(
+            user=user,
+            created_at__date__lte=consistency_date,
+        )
+        total_for_day = habits_for_day.count()
+        completed_for_day = HabitLog.objects.filter(
+            habit__in=habits_for_day,
+            date=consistency_date,
+            is_completed=True,
+        ).count()
+
+        consistency_percent = (
+            round(completed_for_day / total_for_day * 100)
+            if total_for_day
+            else 0
+        )
+
+        weekly_consistency.append(
+            {
+                "date": consistency_date.isoformat(),
+                "day_name": DAY_INITIALS[consistency_date.weekday()],
+                "percent": consistency_percent,
+                "is_current": consistency_date == current_date,
+                "is_future": consistency_date > current_date,
+            }
+        )
+
+    return JsonResponse(
+        {
+            "selected_date": selected_date.isoformat(),
+            "habits": habits_data,
+            "summary": {
+                "total": total_habits,
+                "completed": completed_count,
+                "progress_percent": progress_percent,
+                "streak": streak_obj.current_streak,
+                "best_streak": streak_obj.best_streak,
+                "target_focus_minutes": energy_log.focus_minutes,
+                "logged_focus_minutes": (
+                    energy_log.logged_focus_minutes
+                ),
+                "focus_time_str": format_minutes(
+                    energy_log.logged_focus_minutes,
+                ),
+                "target_focus_str": format_minutes(
+                    energy_log.focus_minutes,
+                ),
+                "is_target_reached": (
+                    energy_log.focus_target_reached
+                ),
+                "hydration": {
+                    "amount_ml": hydration_log.amount_ml,
+                    "target_ml": hydration_log.target_ml,
+                    "remaining_ml": hydration_log.remaining_ml,
+                    "progress_percent": (
+                        hydration_log.progress_percent
+                    ),
+                    "target_reached": hydration_log.target_reached,
+                },
+                "weekly_consistency": weekly_consistency,
+                "sleep": {
+                    "last_night_str": format_minutes(
+                        latest_sleep_log.duration_minutes,
+                    ),
+                    "last_night_hours": (
+                        latest_sleep_log.duration_minutes // 60
+                    ),
+                    "last_night_mins": (
+                        latest_sleep_log.duration_minutes % 60
+                    ),
+                    "target_hours": latest_sleep_log.target_hours,
+                    "target_str": (
+                        f"{latest_sleep_log.target_hours:g} jam"
+                    ),
+                    "status": latest_sleep_log.sleep_status,
+                    "bars": sleep_bars,
+                },
+            },
         }
-    }, status=200)
+    )
+
 
 @login_required
 @require_POST
 def add_habit_ajax(request):
     form = HabitForm(request.POST)
-    if form.is_valid():
-        habit = form.save(commit=False)
-        habit.user = request.user
-        habit.save()
-        return JsonResponse({'message': 'Kebiasaan berhasil ditambahkan!'}, status=201)
-    return JsonResponse({'errors': form.errors.get_json_data()}, status=400)
+
+    if not form.is_valid():
+        return JsonResponse(
+            {"errors": form.errors.get_json_data()},
+            status=400,
+        )
+
+    habit = form.save(commit=False)
+    habit.user = request.user
+    habit.save()
+
+    return JsonResponse(
+        {
+            "message": "Kebiasaan berhasil ditambahkan.",
+            "habit_id": habit.id,
+        },
+        status=201,
+    )
+
 
 @login_required
 @require_POST
 def toggle_habit_ajax(request, habit_id):
-    habit = get_object_or_404(Habit, id=habit_id, user=request.user)
-    today = timezone.now().date()
-    log, _ = HabitLog.objects.get_or_create(habit=habit, date=today)
-    
-    log.is_completed = not log.is_completed
-    log.current_value = habit.target_value if log.is_completed else 0
+    habit = get_object_or_404(
+        Habit,
+        id=habit_id,
+        user=request.user,
+        is_active=True,
+    )
+
+    selected_date = get_selected_date(request)
+
+    log, _ = HabitLog.objects.get_or_create(
+        habit=habit,
+        date=selected_date,
+    )
+
+    if log.is_completed:
+        log.current_value = 0
+    else:
+        log.current_value = habit.target_value
+
     log.save()
 
-    return JsonResponse({
-        'message': 'Status kebiasaan diperbarui',
-        'is_completed': log.is_completed
-    }, status=200)
+    return JsonResponse(
+        {
+            "message": "Status kebiasaan diperbarui.",
+            "is_completed": log.is_completed,
+            "current_value": log.current_value,
+            "progress_percent": log.progress_percent,
+        }
+    )
+
+
+@login_required
+@require_POST
+def add_habit_progress_ajax(request, habit_id):
+    habit = get_object_or_404(
+        Habit,
+        id=habit_id,
+        user=request.user,
+        is_active=True,
+    )
+
+    form = AddHabitProgressForm(request.POST)
+
+    if not form.is_valid():
+        return JsonResponse(
+            {"errors": form.errors.get_json_data()},
+            status=400,
+        )
+
+    selected_date = get_selected_date(request)
+
+    log, _ = HabitLog.objects.get_or_create(
+        habit=habit,
+        date=selected_date,
+    )
+
+    log.current_value += form.cleaned_data["additional_value"]
+    log.save()
+
+    return JsonResponse(
+        {
+            "message": "Progress kebiasaan diperbarui.",
+            "current_value": log.current_value,
+            "progress_percent": log.progress_percent,
+            "is_completed": log.is_completed,
+        }
+    )
+
 
 @login_required
 @require_POST
 def delete_habit_ajax(request, habit_id):
-    habit = get_object_or_404(Habit, id=habit_id, user=request.user)
-    habit.delete()
-    return JsonResponse({'message': 'Kebiasaan berhasil dihapus'}, status=200)
+    habit = get_object_or_404(
+        Habit,
+        id=habit_id,
+        user=request.user,
+        is_active=True,
+    )
+
+    habit.archive()
+
+    return JsonResponse(
+        {"message": "Kebiasaan berhasil diarsipkan."}
+    )
+
 
 @login_required
 @require_POST
 def log_energy_ajax(request):
-    today = timezone.now().date()
-    energy_log, _ = EnergyLog.objects.get_or_create(user=request.user, date=today)
-    
-    form = EnergyLogForm(request.POST, instance=energy_log)
-    if form.is_valid():
-        form.save()
-        return JsonResponse({'message': 'Refleksi energi & fokus berhasil disimpan!'}, status=200)
-    return JsonResponse({'errors': form.errors.get_json_data()}, status=400)
+    selected_date = get_selected_date(request)
+
+    energy_log, _ = EnergyLog.objects.get_or_create(
+        user=request.user,
+        date=selected_date,
+    )
+
+    form = EnergyLogForm(
+        request.POST,
+        instance=energy_log,
+    )
+
+    if not form.is_valid():
+        return JsonResponse(
+            {"errors": form.errors.get_json_data()},
+            status=400,
+        )
+
+    form.save()
+
+    return JsonResponse(
+        {"message": "Energi dan target fokus berhasil disimpan."}
+    )
+
 
 @login_required
 @require_POST
 def add_focus_time_ajax(request):
     form = AddFocusTimeForm(request.POST)
-    if form.is_valid():
-        today = timezone.now().date()
-        energy_log, _ = EnergyLog.objects.get_or_create(user=request.user, date=today)
-        
-        additional = form.cleaned_data['additional_minutes']
-        energy_log.logged_focus_minutes += additional
-        energy_log.save()
-        
-        is_target_reached = energy_log.logged_focus_minutes >= energy_log.focus_minutes and energy_log.focus_minutes > 0
-        
-        return JsonResponse({
-            'message': f'Berhasil menambah {additional} menit fokus!',
-            'logged_focus_minutes': energy_log.logged_focus_minutes,
-            'focus_time_str': format_minutes(energy_log.logged_focus_minutes),
-            'is_target_reached': is_target_reached,
-        }, status=200)
-    return JsonResponse({'errors': form.errors.get_json_data()}, status=400)
+
+    if not form.is_valid():
+        return JsonResponse(
+            {"errors": form.errors.get_json_data()},
+            status=400,
+        )
+
+    selected_date = get_selected_date(request)
+
+    energy_log, _ = EnergyLog.objects.get_or_create(
+        user=request.user,
+        date=selected_date,
+    )
+
+    energy_log.logged_focus_minutes += (
+        form.cleaned_data["additional_minutes"]
+    )
+    energy_log.save()
+
+    return JsonResponse(
+        {
+            "message": "Waktu fokus berhasil ditambahkan.",
+            "logged_focus_minutes": (
+                energy_log.logged_focus_minutes
+            ),
+            "focus_time_str": format_minutes(
+                energy_log.logged_focus_minutes,
+            ),
+            "is_target_reached": (
+                energy_log.focus_target_reached
+            ),
+        }
+    )
+
 
 @login_required
 @require_POST
 def log_sleep_settings_ajax(request):
     form = SleepSettingForm(request.POST)
-    if form.is_valid():
-        today = timezone.now().date()
-        target_h = form.cleaned_data['target_hours']
-        sleep_h = form.cleaned_data['sleep_hours']
-        sleep_m = form.cleaned_data['sleep_minutes']
-        total_mins = (sleep_h * 60) + sleep_m
 
-        # Perbarui log hari ini
-        sleep_log, _ = SleepLog.objects.get_or_create(user=request.user, date=today)
-        sleep_log.target_hours = target_h
-        sleep_log.duration_minutes = total_mins
-        sleep_log.save()
+    if not form.is_valid():
+        return JsonResponse(
+            {"errors": form.errors.get_json_data()},
+            status=400,
+        )
 
-        # Update target_hours pada log 7 hari terakhir agar konsisten
-        for i in range(1, 7):
-            past_date = today - timedelta(days=i)
-            SleepLog.objects.filter(user=request.user, date=past_date).update(target_hours=target_h)
+    selected_date = get_selected_date(request)
 
-        return JsonResponse({
-            'message': 'Pengaturan & catatan tidur berhasil disimpan!',
-            'last_night_str': format_minutes(total_mins),
-        }, status=200)
-        
-    return JsonResponse({'errors': form.errors.get_json_data()}, status=400)
+    duration_minutes = (
+        form.cleaned_data["sleep_hours"] * 60
+        + form.cleaned_data["sleep_minutes"]
+    )
+
+    sleep_log, _ = SleepLog.objects.get_or_create(
+        user=request.user,
+        date=selected_date,
+    )
+
+    sleep_log.target_hours = form.cleaned_data["target_hours"]
+    sleep_log.duration_minutes = duration_minutes
+    sleep_log.save()
+
+    return JsonResponse(
+        {
+            "message": "Catatan tidur berhasil disimpan.",
+            "last_night_str": format_minutes(duration_minutes),
+            "status": sleep_log.sleep_status,
+        }
+    )
+
+
+@login_required
+@require_POST
+def add_hydration_ajax(request):
+    form = HydrationForm(request.POST)
+
+    if not form.is_valid():
+        return JsonResponse(
+            {"errors": form.errors.get_json_data()},
+            status=400,
+        )
+
+    selected_date = get_selected_date(request)
+
+    hydration_log, _ = HydrationLog.objects.get_or_create(
+        user=request.user,
+        date=selected_date,
+    )
+
+    hydration_log.amount_ml += form.cleaned_data["amount_ml"]
+
+    hydration_log.save()
+
+    return JsonResponse(
+        {
+            "message": "Hidrasi berhasil ditambahkan.",
+            "amount_ml": hydration_log.amount_ml,
+            "target_ml": hydration_log.target_ml,
+            "remaining_ml": hydration_log.remaining_ml,
+            "progress_percent": hydration_log.progress_percent,
+            "target_reached": hydration_log.target_reached,
+        }
+    )

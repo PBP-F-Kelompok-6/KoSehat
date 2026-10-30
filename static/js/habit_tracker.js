@@ -80,6 +80,7 @@ function renderWeeklyCalendar() {
     `;
 
     stripContainer.appendChild(card);
+
   }
 }
 
@@ -97,7 +98,7 @@ async function loadHabits() {
     const kpiCompleted = document.getElementById('kpi-completed');
     const kpiRemaining = document.getElementById('kpi-remaining');
     const progressBar = document.getElementById('habit-progress-bar');
-    const kpiEnergy = document.getElementById('kpi-energy');
+    const progressPercent = document.getElementById('habit-progress-percent');
 
     // KPI Focus Elements
     const kpiFocus = document.getElementById('kpi-focus');
@@ -116,17 +117,61 @@ async function loadHabits() {
     if (kpiCompleted) kpiCompleted.innerText = `${data.summary.completed} / ${data.summary.total}`;
     if (kpiRemaining) kpiRemaining.innerText = `${data.summary.total - data.summary.completed} target belum selesai`;
     if (progressBar) progressBar.style.width = `${data.summary.progress_percent}%`;
-    
-    // Update KPI Energi Pagi
-    if (kpiEnergy && data.summary.energy_level !== undefined) {
-      kpiEnergy.innerText = `${data.summary.energy_level} / 10`;
-      const inputEnergy = document.getElementById('input-energy-level');
-      if (inputEnergy) inputEnergy.value = data.summary.energy_level;
+    if (progressPercent) {
+      progressPercent.innerText = `${data.summary.progress_percent}%`;
     }
 
+    const weeklyChart = document.getElementById('weekly-consistency-chart');
+    if (weeklyChart && data.summary.weekly_consistency) {
+      weeklyChart.innerHTML = '';
+
+      data.summary.weekly_consistency.forEach(day => {
+        const column = document.createElement('div');
+        const state = day.is_future
+          ? 'future'
+          : day.is_current
+            ? 'current'
+            : 'past';
+
+        column.className = `weekly-consistency-column ${state}`;
+        column.innerHTML = `
+          <span class="weekly-consistency-percent">${day.percent}%</span>
+          <div class="weekly-consistency-bar-wrap">
+            <div class="weekly-consistency-bar" style="height: ${day.percent}%;"></div>
+          </div>
+          <span class="weekly-consistency-day">${day.day_name}</span>
+        `;
+
+        weeklyChart.appendChild(column);
+      });
+    }
+    
     // Update KPI Waktu Fokus
     if (kpiFocus) {
       kpiFocus.innerText = data.summary.focus_time_str || '0m';
+    }
+
+    const hydration = data.summary.hydration;
+    if (hydration) {
+      const amount = document.getElementById('hydration-amount');
+      const remaining = document.getElementById('hydration-remaining');
+      const progress = document.getElementById('hydration-progress');
+      const hydrationStatus = document.getElementById('hydration-status');
+
+      if (amount) amount.innerText = `${hydration.amount_ml} ml`;
+      if (remaining) {
+        remaining.innerText = hydration.target_reached
+          ? ''
+          : `Sisa ${hydration.remaining_ml} ml`;
+      }
+      if (hydrationStatus) {
+        hydrationStatus.innerHTML = hydration.target_reached
+          ? '<span class="target-badge">✓ Target tercapai!</span>'
+          : '';
+      }
+      if (progress) {
+        progress.style.width = `${hydration.progress_percent}%`;
+      }
     }
 
     if (kpiFocusTargetText) {
@@ -196,9 +241,11 @@ async function loadHabits() {
       row.innerHTML = `
         <div class="habit-info">
           <h4>${escapeHtml(h.title)}</h4>
-          <p>${h.current_value} ${escapeHtml(h.unit)} ${h.logged_time ? '• pukul ' + h.logged_time : ''}</p>
+          <p>${h.current_value} / ${h.target_value} ${escapeHtml(h.unit)} ${h.logged_time ? '• pukul ' + h.logged_time : ''}</p>
+          <div class="habit-mini-progress"><span style="width:${h.progress_percent}%;"></span></div>
         </div>
         <div style="display:flex; gap:8px; align-items:center;">
+          <button class="btn-add-progress" onclick="addHabitProgress(${h.id})" aria-label="Tambah progress">Tambah</button>
           <button class="checkbox-circle ${h.is_completed ? 'checked' : ''}" onclick="toggleHabit(${h.id})">
             ${h.is_completed ? '✓' : ''}
           </button>
@@ -232,6 +279,51 @@ async function deleteHabit(habitId) {
   if (res.ok) {
     showToast('Kebiasaan berhasil dihapus');
     loadHabits();
+  }
+}
+
+async function addHabitProgress(habitId) {
+  const value = prompt('Masukkan tambahan progress:');
+  if (value === null || value.trim() === '') return;
+
+  const parsedValue = Number(value);
+  if (!Number.isInteger(parsedValue) || parsedValue < 1) {
+    showToast('Progress harus berupa bilangan positif', 'error');
+    return;
+  }
+
+  const formData = new FormData();
+  formData.append('additional_value', parsedValue);
+
+  const res = await fetch(`/habit-tracker/api/progress/${habitId}/`, {
+    method: 'POST',
+    headers: { 'X-CSRFToken': getCookie('csrftoken') },
+    body: formData
+  });
+
+  if (res.ok) {
+    showToast('Progress kebiasaan diperbarui!');
+    loadHabits();
+  } else {
+    showToast('Gagal memperbarui progress', 'error');
+  }
+}
+
+async function addHydration(amountMl) {
+  const formData = new FormData();
+  formData.append('amount_ml', amountMl);
+
+  const res = await fetch('/habit-tracker/api/hydration/add/', {
+    method: 'POST',
+    headers: { 'X-CSRFToken': getCookie('csrftoken') },
+    body: formData
+  });
+
+  if (res.ok) {
+    showToast(`Hidrasi bertambah ${amountMl} ml`);
+    loadHabits();
+  } else {
+    showToast('Gagal mencatat hidrasi', 'error');
   }
 }
 

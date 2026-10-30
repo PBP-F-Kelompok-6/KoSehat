@@ -1,49 +1,82 @@
 from django import forms
 from django.utils.html import strip_tags
-from .models import Habit, EnergyLog
+
+from .models import EnergyLog, Habit
+
 
 class HabitForm(forms.ModelForm):
     class Meta:
         model = Habit
-        fields = ['title', 'category', 'target_value', 'unit']
+        fields = ["title", "category", "target_value", "unit"]
 
     def clean_title(self):
-        title = strip_tags(self.cleaned_data.get('title', '')).strip()
+        title = strip_tags(
+            self.cleaned_data.get("title", "")
+        ).strip()
+
         if not title:
-            raise forms.ValidationError("Judul kebiasaan tidak boleh kosong.")
+            raise forms.ValidationError(
+                "Judul kebiasaan tidak boleh kosong."
+            )
+
         return title
 
     def clean_unit(self):
-        return strip_tags(self.cleaned_data.get('unit', '')).strip()
+        unit = strip_tags(
+            self.cleaned_data.get("unit", "")
+        ).strip()
+
+        if not unit:
+            raise forms.ValidationError(
+                "Satuan kebiasaan tidak boleh kosong."
+            )
+
+        return unit
+
 
 class EnergyLogForm(forms.ModelForm):
     class Meta:
         model = EnergyLog
-        fields = ['energy_level', 'focus_minutes']
+        fields = ["focus_minutes"]
 
-    def clean_energy_level(self):
-        level = self.cleaned_data.get('energy_level')
-        if level < 1 or level > 10:
-            raise forms.ValidationError("Tingkat energi harus berada di skala 1 - 10.")
-        return level
-
-    def clean_focus_minutes(self):
-        minutes = self.cleaned_data.get('focus_minutes')
-        if minutes < 0:
-            raise forms.ValidationError("Waktu fokus tidak boleh bernilai negatif.")
-        return minutes
 
 class AddFocusTimeForm(forms.Form):
     additional_minutes = forms.IntegerField(
         min_value=1,
-        error_messages={'min_value': 'Durasi fokus minimal 1 menit.'}
+        error_messages={
+            "min_value": "Durasi fokus minimal 1 menit.",
+        },
     )
+
+
+class AddHabitProgressForm(forms.Form):
+    additional_value = forms.IntegerField(
+        min_value=1,
+        error_messages={
+            "min_value": "Progress harus lebih dari 0.",
+        },
+    )
+
 
 class SleepSettingForm(forms.Form):
     target_hours = forms.FloatField(
         min_value=1.0,
         max_value=24.0,
-        error_messages={'invalid': 'Masukkan target durasi tidur yang valid.'}
     )
-    sleep_hours = forms.IntegerField(min_value=0, max_value=23)
-    sleep_minutes = forms.IntegerField(min_value=0, max_value=59)
+    sleep_hours = forms.IntegerField(
+        min_value=0,
+        max_value=23,
+    )
+    sleep_minutes = forms.IntegerField(
+        min_value=0,
+        max_value=59,
+    )
+
+
+class HydrationForm(forms.Form):
+    amount_ml = forms.IntegerField(
+        min_value=1,
+        error_messages={
+            "min_value": "Jumlah hidrasi minimal 1 ml.",
+        },
+    )

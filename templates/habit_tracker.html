@@ -16,14 +16,6 @@
       <h2 class="font-serif-heading">Kenali pola yang bikin badanmu terasa lebih enak.</h2>
       <p class="tracker-subtitle">Catat kebiasaan sederhana dan lihat hubungan antara tidur, hidrasi, serta energi harian.</p>
     </div>
-    <div class="header-actions">
-      <button class="btn-energy" id="btn-open-energy-modal">
-        ⚡ Catat Energi
-      </button>
-      <button class="btn-primary" id="btn-open-modal">
-        <span>+</span> Tambah kebiasaan
-      </button>
-    </div>
   </header>
 
   <!-- Weekly Calendar Section -->
@@ -47,11 +39,6 @@
       <div class="kpi-sub" id="kpi-remaining">0 target belum selesai</div>
     </div>
     <div class="kpi-card">
-      <div class="kpi-label">Energi pagi</div>
-      <div class="kpi-val" id="kpi-energy">8 / 10</div>
-      <div class="kpi-sub" id="kpi-energy-sub">Tingkat kesegaran fisik</div>
-    </div>
-    <div class="kpi-card">
       <div class="kpi-card-focus-header">
         <div>
           <div class="kpi-label">Waktu fokus</div>
@@ -59,17 +46,23 @@
           <div class="kpi-sub-target" id="kpi-focus-target-text">Target: 0m</div>
           <div id="kpi-focus-badge-container"></div>
         </div>
-        <button class="btn-add-focus-trigger" id="btn-open-add-focus-modal">
-          + Tambah
-        </button>
+        <button class="btn-dots-menu" id="btn-open-energy-modal" title="Pengaturan waktu fokus">•••</button>
       </div>
+      <button class="btn-add-focus-trigger" id="btn-open-add-focus-modal">+ Tambah</button>
     </div>
   </div>
 
   <!-- Main Body Grid -->
   <div class="tracker-body-grid">
     <div class="habit-section-card">
-      <h3>Kebiasaan hari ini</h3>
+      <div class="habit-section-header">
+        <h3>Kebiasaan hari ini</h3>
+        <button class="btn-dots-menu" id="btn-open-modal" title="Tambah kebiasaan">•••</button>
+      </div>
+      <div class="habit-progress-summary">
+        <strong id="habit-progress-percent">0%</strong>
+        <span>kebiasaan selesai hari ini</span>
+      </div>
       <div class="progress-bar-bg" style="margin: 16px 0;">
         <div class="progress-bar-fill" id="habit-progress-bar" style="width: 0%;"></div>
       </div>
@@ -101,11 +94,28 @@
 
       <div class="side-widget-card">
         <h4>Hidrasi Harian</h4>
-        <p class="kpi-val" style="margin-top: 8px;">1.500 ml</p>
-        <p class="kpi-sub">Sisa 500 ml lagi</p>
+        <p class="kpi-val" id="hydration-amount" style="margin-top: 8px;">0 ml</p>
+        <div class="progress-bar-bg">
+          <div class="progress-bar-fill" id="hydration-progress" style="width: 0%;"></div>
+        </div>
+        <p class="kpi-sub" id="hydration-remaining">Sisa 2.000 ml</p>
+        <div id="hydration-status"></div>
+        <div class="hydration-actions">
+          <button type="button" onclick="addHydration(250)">+250 ml</button>
+          <button type="button" onclick="addHydration(500)">+500 ml</button>
+        </div>
       </div>
     </div>
   </div>
+
+  <section class="weekly-consistency-card">
+    <div class="weekly-consistency-header">
+      <div>
+        <h3>Konsistensi mingguan</h3>
+      </div>
+    </div>
+    <div class="weekly-consistency-chart" id="weekly-consistency-chart"></div>
+  </section>
 </div>
 
 <!-- Modal Form Add Habit -->
@@ -149,13 +159,9 @@
 <!-- Modal Form Log Energy -->
 <div class="modal-overlay" id="energy-modal">
   <div class="modal-box">
-    <h3>Refleksi Energi & Fokus Hari Ini</h3>
+      <h3>Pengaturan Waktu Fokus</h3>
     <form id="form-log-energy" style="margin-top: 16px;">
       {% csrf_token %}
-      <div style="margin-bottom: 12px;">
-        <label style="font-size: 0.8rem; font-weight: 600;">Tingkat Energi Pagi (Skala 1 - 10)</label>
-        <input type="number" name="energy_level" id="input-energy-level" min="1" max="10" value="8" required style="width: 100%; padding: 8px; border-radius: 8px; border: 1px solid #ccc; margin-top: 4px;">
-      </div>
       <div style="margin-bottom: 20px;">
         <label style="font-size: 0.8rem; font-weight: 600;">Target Waktu Fokus Belajar Hari Ini (Menit)</label>
         <input type="number" name="focus_minutes" id="input-focus-minutes" min="0" value="195" required style="width: 100%; padding: 8px; border-radius: 8px; border: 1px solid #ccc; margin-top: 4px;">

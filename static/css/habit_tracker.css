@@ -83,10 +83,10 @@
   margin-top: 4px;
 }
 
-/* Stat Grid (4 KPI Cards) */
+/* Stat Grid (3 KPI Cards) */
 .kpi-grid {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 16px;
   margin-bottom: 24px;
 }
@@ -94,7 +94,7 @@
 .kpi-card {
   background: var(--color-white);
   border-radius: var(--radius-lg);
-  padding: 20px;
+  padding: 14px 20px;
   border: 1px solid #e5e7eb;
 }
 
@@ -319,6 +319,116 @@
   gap: 12px;
 }
 
+.kpi-card:has(.kpi-card-focus-header) {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+}
+
+.btn-add-focus-trigger {
+  align-self: flex-end;
+  margin-top: auto;
+}
+
+.habit-section-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.habit-section-header h3 {
+  margin: 0;
+}
+
+.habit-progress-summary {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin-top: 12px;
+  color: var(--color-text-muted);
+  font-size: 0.8rem;
+}
+
+.habit-progress-summary strong {
+  color: var(--color-text-dark);
+  font-size: 1.6rem;
+}
+
+.weekly-consistency-card {
+  margin-top: 24px;
+  padding: 20px;
+  background: var(--color-white);
+  border: 1px solid #e5e7eb;
+  border-radius: var(--radius-lg);
+}
+
+.weekly-consistency-header h3 {
+  margin: 0;
+}
+
+.weekly-consistency-header p {
+  margin: 4px 0 0;
+  color: var(--color-text-muted);
+  font-size: 0.75rem;
+}
+
+.weekly-consistency-chart {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 12px;
+  height: 150px;
+  margin-top: 18px;
+}
+
+.weekly-consistency-column {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 6px;
+}
+
+.weekly-consistency-percent,
+.weekly-consistency-day {
+  color: var(--color-text-muted);
+  font-size: 0.7rem;
+}
+
+.weekly-consistency-day {
+  font-weight: 600;
+}
+
+.weekly-consistency-bar-wrap {
+  display: flex;
+  width: 100%;
+  height: 100px;
+  align-items: flex-end;
+  overflow: hidden;
+  border-radius: 6px 6px 2px 2px;
+  background: #eef0e2;
+}
+
+.weekly-consistency-bar {
+  width: 100%;
+  min-height: 3px;
+  border-radius: 6px 6px 2px 2px;
+  background: #d8dfb8;
+}
+
+.weekly-consistency-column.current .weekly-consistency-bar {
+  background: #3f4a17;
+}
+
+.weekly-consistency-column.past .weekly-consistency-bar {
+  background: #a5b34c;
+}
+
+.weekly-consistency-column.future .weekly-consistency-bar {
+  background: #d1d3cc;
+}
+
 .btn-add-focus-trigger {
   background-color: var(--bg-sidebar-card);
   color: var(--color-white);
@@ -433,8 +543,8 @@
 }
 
 .sleep-bar {
-  width: 85%;
-  max-width: 28px;
+  width: 94%;
+  max-width: 42px;
   background-color: #e2e8d5; /* Warna hijau muda pastel untuk 6 malam sebelumnya */
   border-radius: 6px 6px 3px 3px;
   transition: height 0.3s ease, opacity 0.2s ease;
@@ -511,4 +621,44 @@
   height: 8px;
   border-radius: 50%;
   background-color: #f3e8a3; /* Titik kuning lembut sesuai acuan gambar */
+}
+.day-card {
+  cursor: pointer;
+}
+
+.day-card:focus-visible {
+  outline: 3px solid #8da432;
+  outline-offset: 2px;
+}
+
+.habit-mini-progress {
+  width: 100%;
+  height: 4px;
+  margin-top: 6px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: #e8ead9;
+}
+
+.habit-mini-progress span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: #8da432;
+}
+
+.hydration-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.hydration-actions button,
+.btn-add-progress {
+  border: 1px solid #d9dfb9;
+  border-radius: 8px;
+  padding: 6px 10px;
+  color: #3f4a17;
+  background: #f7f8ed;
+  cursor: pointer;
 }
