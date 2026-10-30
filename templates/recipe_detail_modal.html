@@ -6,7 +6,6 @@
   class="modal-overlay"
   aria-hidden="true"
   data-detail-url="{% url 'recipe_catalog:recipe_detail_api' 0 %}"
-  data-bookmark-url="{% url 'recipe_catalog:toggle_bookmark' 0 %}"
 >
   <div class="modal-card recipe-detail-card" role="dialog" aria-modal="true">
     <!-- Header Modal & Close Button -->
@@ -86,13 +85,6 @@
 
       <!-- Modal Footer Action (UI Kit Style) -->
       <div class="modal-footer-actions">
-        <button
-          type="button"
-          class="btn-action btn-sekunder"
-          id="btnBookmarkModal"
-        >
-          Bookmark Resep
-        </button>
         <button
           type="button"
           class="btn-action btn-primer"

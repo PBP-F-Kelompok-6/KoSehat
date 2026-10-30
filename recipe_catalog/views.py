@@ -3,7 +3,7 @@ from django.shortcuts import render, get_object_or_404, redirect
 from django.http import JsonResponse, HttpResponseForbidden
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.views.decorators.http import require_POST, require_GET
-from .models import Recipe, EducationArticle, SavedRecipe
+from .models import Recipe, EducationArticle
 from .forms import RecipeForm, EducationArticleForm
 from .services import get_or_fetch_recipes
 
@@ -90,17 +90,6 @@ def recipe_delete_view(request, recipe_id):
     recipe = get_object_or_404(Recipe, pk=recipe_id)
     recipe.delete()
     return JsonResponse({'status': 'success', 'message': 'Resep berhasil dihapus'})
-
-@login_required
-@require_POST
-def toggle_save_recipe(request, recipe_id):
-    recipe = get_object_or_404(Recipe, pk=recipe_id)
-    saved, created = SavedRecipe.objects.get_or_create(user=request.user, recipe=recipe)
-    
-    if not created:
-        saved.delete()
-        return JsonResponse({'status': 'unbookmarked'})
-    return JsonResponse({'status': 'bookmarked'})
 
 def recipe_detail_view(request, recipe_id):
     recipe = get_object_or_404(Recipe, pk=recipe_id)

@@ -12,11 +12,9 @@ const modalLoading = document.getElementById('modalLoading');
 const modalBody = document.getElementById('modalBody');
 const btnCloseModal = document.getElementById('btnCloseModal');
 const btnCloseModalFooter = document.getElementById('btnCloseModalFooter');
-const btnBookmarkModal = document.getElementById('btnBookmarkModal');
 
 // Ambil Template URL dari Modal HTML
-  const detailUrlTemplate = modalOverlay ? modalOverlay.getAttribute("data-detail-url") : "";
-  const bookmarkUrlTemplate = modalOverlay ? modalOverlay.getAttribute("data-bookmark-url") : "";
+const detailUrlTemplate = modalOverlay ? modalOverlay.getAttribute("data-detail-url") : "";
 
 const articleDetailModal = document.getElementById("articleDetailModal");
 const articleFormModal = document.getElementById("articleFormModal");
@@ -136,10 +134,6 @@ let currentActiveRecipeId = null;
     modalLoading.style.display = 'block';
     modalBody.style.display = 'none';
 
-    // Reset status tombol bookmark
-    btnBookmarkModal.textContent = 'Bookmark Resep';
-    btnBookmarkModal.style.backgroundColor = '';
-
     fetch(detailUrl)
       .then((response) => {
         if (!response.ok) throw new Error('Gagal mengambil data resep.');
@@ -208,40 +202,6 @@ let currentActiveRecipeId = null;
       closeModal();
     }
   });
-
-  // 7. Handler Bookmark dari Modal (CSRF Protected)
-  if (btnBookmarkModal) {
-    btnBookmarkModal.addEventListener('click', () => {
-      if (!currentActiveRecipeId) return;
-
-      if (!bookmarkUrlTemplate) {
-        console.error("Template bookmark-url tidak ditemukan di HTML modal.");
-        return;
-      }
-
-    // Replace dummy '0' dengan recipeId aktual
-    const bookmarkUrl = bookmarkUrlTemplate.replace("0", currentActiveRecipeId);
-
-      fetch(bookmarkUrl, {
-        method: 'POST',
-        headers: {
-          'X-CSRFToken': getCookie('csrftoken'),
-          'Content-Type': 'application/json'
-        }
-      })
-      .then(res => res.json())
-      .then(resData => {
-        if (resData.status === 'bookmarked') {
-          btnBookmarkModal.textContent = 'Disimpan ✓';
-          btnBookmarkModal.style.backgroundColor = '#bbf7d0';
-        } else {
-          btnBookmarkModal.textContent = 'Bookmark Resep';
-          btnBookmarkModal.style.backgroundColor = '#fce762';
-        }
-      })
-      .catch(err => console.error('Gagal memperbarui bookmark:', err));
-    });
-  }
 
   // Helper untuk Membaca Cookie CSRF Token
   function getCookie(name) {
