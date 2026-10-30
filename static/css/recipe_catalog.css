@@ -859,6 +859,93 @@
   background-color: #f4f3ea;
 }
 
+/* ==========================================================================
+   VIEW MODE SWITCHER STATES (Client-Side Layout Toggling)
+   ========================================================================== */
+
+/* --- Mode: RESEP (Fokus ke Resep) --- */
+.catalog-container[data-view-mode="resep"] .catalog-sidebar {
+  display: none;
+}
+
+/* --- Mode: EDUKASI (Fokus ke Artikel Edukasi) --- */
+/* Sembunyikan elemen resep & filter resep */
+.catalog-container[data-view-mode="edukasi"] .filter-pills-row,
+.catalog-container[data-view-mode="edukasi"] .featured-editor-card,
+.catalog-container[data-view-mode="edukasi"] .recipes-main-content {
+  display: none;
+}
+
+/* Biarkan sidebar edukasi memenuhi lebar halaman */
+.catalog-container[data-view-mode="edukasi"] .catalog-sidebar {
+  width: 100%;
+}
+
+.catalog-container[data-view-mode="edukasi"] .education-widget-card {
+  background-color: transparent;
+  border: none;
+  padding: 0;
+}
+
+/* Ubah daftar artikel menjadi Grid 3 Kolom */
+.catalog-container[data-view-mode="edukasi"] .article-list {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+}
+
+.catalog-container[data-view-mode="edukasi"] .article-card {
+  border-bottom: none;
+  background-color: #ffffff;
+  padding: 20px;
+  border-radius: 16px;
+  border: 1px solid #f0f0f0;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03);
+}
+
+.catalog-container[data-view-mode="edukasi"] .btn-see-all-edu {
+  display: none;
+}
+
+.mode-tab {
+  border: none;
+  background: transparent;
+  padding: 6px 16px;
+  border-radius: 9999px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #4b5563;
+  cursor: pointer; /* Memberikan indikator kursor tangan */
+  transition: all 0.2s ease;
+  user-select: none;
+}
+
+.mode-tab:hover {
+  color: #232e10;
+}
+
+.mode-tab:active {
+  transform: scale(0.96); /* Efek membal saat ditekan */
+}
+
+.mode-tab.active {
+  background-color: #313e1a;
+  color: #ffffff;
+}
+
+/* Responsivitas Mode Edukasi */
+@media (max-width: 992px) {
+  .catalog-container[data-view-mode="edukasi"] .article-list {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 640px) {
+  .catalog-container[data-view-mode="edukasi"] .article-list {
+    grid-template-columns: 1fr;
+  }
+}
+
 /* Responsivity */
 @media (max-width: 1200px) {
   .recipe-cards-grid {
