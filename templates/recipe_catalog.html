@@ -170,6 +170,7 @@ Edukasi - KoSehat{% endblock title %} {% block extra_css %}
         <div class="widget-header">
           <h3 class="font-serif-heading">Belajar 5 menit</h3>
           <div class="widget-header-actions">
+            {% if is_editor %}
             <button
               type="button"
               class="btn-add-article-icon"
@@ -178,6 +179,7 @@ Edukasi - KoSehat{% endblock title %} {% block extra_css %}
             >
               +
             </button>
+            {% endif %}
             <span class="widget-icon">📖</span>
           </div>
         </div>
@@ -192,6 +194,7 @@ Edukasi - KoSehat{% endblock title %} {% block extra_css %}
           >
             <div class="article-card-header-row">
               <h4>{{ article.title }}</h4>
+              {% if is_editor %}
               <button
                 type="button"
                 class="btn-edit-article-sm"
@@ -200,6 +203,7 @@ Edukasi - KoSehat{% endblock title %} {% block extra_css %}
               >
                 ✏️
               </button>
+              {% endif %}
             </div>
             <p class="article-desc">{{ article.snippet }}</p>
             <p class="article-meta">
