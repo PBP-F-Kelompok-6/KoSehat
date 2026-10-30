@@ -133,7 +133,7 @@ def upsert_recipes_to_db(parsed_recipes):
         saved_instances.append(recipe_obj)
     return saved_instances
 
-def get_or_fetch_recipes(query='', tag='', max_ready_time=None, max_price=None, number=12):
+def get_or_fetch_recipes(query='', tag='', max_ready_time=None, max_price=None, number=18):
     """
     Implementasi Cache-Aside Pattern: Cek DB lokal terlebih dahulu.
     Jika tidak mencukupi, panggil API lalu simpan hasilnya ke DB.
@@ -150,21 +150,30 @@ def get_or_fetch_recipes(query='', tag='', max_ready_time=None, max_price=None, 
         qs = qs.filter(estimated_cost__lte=max_price)
 
     # Ambang batas hit (Cache Hit)
-    if qs.count() >= 6:
+    if qs.count() >= number:
         return list(qs[:number])
 
     # Cache Miss: Panggil API dan lakukan upsert ke DB lokal
     api_data = fetch_recipes_from_api(
         query=query, 
         tag=tag, 
-        max_ready_time=max_ready_time, 
+        max_ready_time=max_ready_time,
         max_price=max_price, 
-        number=number
+        number=24
     )
     
     if api_data:
         upsert_recipes_to_db(api_data)
-        # Re-query DB agar mengembalikan instance ORM resmi
+        # Re-query DB agar mengembalikan instance ORM terbaru
+        qs = Recipe.objects.all()
+        if query:
+            qs = qs.filter(title__icontains=query)
+        if tag:
+            qs = qs.filter(tag=tag)
+        if max_ready_time:
+            qs = qs.filter(prep_time_minutes__lte=max_ready_time)
+        if max_price:
+            qs = qs.filter(estimated_cost__lte=max_price)
         return list(qs[:number])
 
     # Fallback jika API gagal/rate-limited: kembalikan apa yang ada di DB lokal
