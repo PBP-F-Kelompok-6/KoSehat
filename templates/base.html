@@ -8,10 +8,9 @@
       {% block title %}KoSehat - Sustainable Living Tracker{% endblock %}
     </title>
 
-    <!-- CSS Vanilla Bersama (Variabel :root & Layout Base) -->
     <link rel="stylesheet" href="{% static 'css/style.css' %}" />
 
-    <!-- Placeholder CSS Spesifik Modul -->
+
     {% block extra_css %}{% endblock extra_css %}
   </head>
   <body>
@@ -65,7 +64,7 @@
 
             <!-- Meal Planner -->
             <a
-              href=""
+              href="{% url 'meal_planner:index' %}"
               class="nav-link {% if request.resolver_match.namespace == 'meal_planner' or request.resolver_match.url_name == 'meal_planner' %}active{% endif %}"
             >
               <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -195,22 +194,10 @@
             {% endif %}
           </div>
         </div>
-          <button class="btn-icon-options" aria-label="Opsi Pengguna">
-            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M5 12h.01M12 12h.01M19 12h.01M6 12a1 1 0 11-2 0 1 1 0 012 0zm7 0a1 1 0 11-2 0 1 1 0 012 0zm7 0a1 1 0 11-2 0 1 1 0 012 0z"
-              ></path>
-            </svg>
-          </button>
-        </div>
       </aside>
 
-      <!-- MAIN CONTENT AREA -->
       <main class="main-content">
-        <!-- Alert Messages -->
+      
         {% if messages %}
         <div class="alert-messages">
           {% for message in messages %}
@@ -223,7 +210,6 @@
         </div>
         {% endif %}
 
-        <!-- Inherited Content Block -->
         {% block content %} {% endblock content %}
       </main>
     </div>

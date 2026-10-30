@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" role="img" aria-label="Tunas yang mulai tumbuh">
+  <style>
+    .sway { transform-origin: 60px 88px; animation: sway 3s ease-in-out infinite; }
+    @keyframes sway { 0%, 100% { transform: rotate(-4deg); } 50% { transform: rotate(4deg); } }
+  </style>
+  <circle cx="60" cy="60" r="56" fill="#f4f3ea"/>
+  <ellipse cx="60" cy="92" rx="36" ry="12" fill="#8b6b4a"/>
+  <ellipse cx="60" cy="88" rx="31" ry="9" fill="#a07f5a"/>
+  <g class="sway">
+    <path d="M60 88 C60 72 60 62 60 46" stroke="#4c6b1f" stroke-width="4" fill="none" stroke-linecap="round"/>
+    <path d="M60 64 C46 64 37 56 37 45 C50 45 58 52 60 64 Z" fill="#7fa33a"/>
+    <path d="M60 54 C74 54 83 46 83 35 C70 35 62 42 60 54 Z" fill="#6b8e23"/>
+  </g>
+</svg>

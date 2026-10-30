@@ -14,6 +14,11 @@ from pathlib import Path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
+import os
+from dotenv import load_dotenv
+
+load_dotenv(BASE_DIR / '.env')
+USDA_API_KEY = os.environ.get('USDA_API_KEY') or 'DEMO_KEY'
 
 
 # Quick-start development settings - unsuitable for production
@@ -41,6 +46,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'meal_planner',
     'django_cas_ng',
     'user_profile',
 ]
@@ -112,7 +118,8 @@ AUTH_PASSWORD_VALIDATORS = [
 
 LANGUAGE_CODE = 'en-us'
 
-TIME_ZONE = 'UTC'
+
+TIME_ZONE = 'Asia/Jakarta'      # ganti dari 'UTC'
 
 USE_I18N = True
 

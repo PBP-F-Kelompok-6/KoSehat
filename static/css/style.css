@@ -1,10 +1,7 @@
 /* Google Fonts Import */
 @import url("https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap");
 
-/* ==========================================================================
-   GLOBAL VARIABLES (:root)
-   Variabel ini dipakai bersama oleh style.css dan CSS spesifik tiap modul
-   ========================================================================== */
+
 :root {
   /* Color Palette - KoSehat Theme */
   --bg-main: #f4f3ea;
@@ -37,9 +34,7 @@
   --sidebar-width: 260px;
 }
 
-/* ==========================================================================
-   RESET & BASE STYLES
-   ========================================================================== */
+
 * {
   box-sizing: border-box;
   margin: 0;
@@ -60,9 +55,7 @@ body {
   min-height: 100vh;
 }
 
-/* ==========================================================================
-   SIDEBAR LAYOUT & COMPONENTS
-   ========================================================================== */
+
 .sidebar {
   width: var(--sidebar-width);
   background-color: var(--bg-sidebar);
