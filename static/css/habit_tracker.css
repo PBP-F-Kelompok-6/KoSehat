@@ -356,3 +356,159 @@
   color: #6b7280;
   margin-top: 4px;
 }
+
+/* ==========================================================================
+   SLEEP QUALITY CARD STYLING
+   ========================================================================== */
+.sleep-widget-card {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.sleep-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+.widget-subtitle {
+  font-size: 0.75rem;
+  color: #6b7280;
+  margin-top: 2px;
+}
+
+.btn-dots-menu {
+  background: none;
+  border: none;
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #6b7280;
+  cursor: pointer;
+  padding: 2px 6px;
+  border-radius: 4px;
+  line-height: 1;
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.btn-dots-menu:hover {
+  background-color: #f3f4f6;
+  color: #111827;
+}
+
+.sleep-main-val {
+  font-size: 1.875rem;
+  font-weight: 700;
+  color: var(--color-ink, #1f2937);
+  margin: 10px 0 14px 0;
+}
+
+/* Container Chart 7 Malam */
+.sleep-chart-container {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  height: 110px;
+  padding-top: 16px;
+  margin-bottom: 14px;
+  gap: 6px;
+}
+
+.sleep-bar-col {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  height: 100%;
+  justify-content: flex-end;
+}
+
+.sleep-bar-wrapper {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  position: relative;
+}
+
+.sleep-bar {
+  width: 85%;
+  max-width: 28px;
+  background-color: #e2e8d5; /* Warna hijau muda pastel untuk 6 malam sebelumnya */
+  border-radius: 6px 6px 3px 3px;
+  transition: height 0.3s ease, opacity 0.2s ease;
+  position: relative;
+  cursor: pointer;
+}
+
+.sleep-bar.latest {
+  background-color: #3b4728; /* Warna hijau tua khas untuk malam terakhir */
+}
+
+.sleep-bar:hover {
+  opacity: 0.85;
+}
+
+.sleep-day-label {
+  font-size: 0.75rem;
+  color: #6b7280;
+  margin-top: 8px;
+  font-weight: 500;
+}
+
+/* Tooltip Hover Durasi Tidur */
+.sleep-bar .sleep-tooltip {
+  visibility: hidden;
+  opacity: 0;
+  background-color: #1f2937;
+  color: #ffffff;
+  text-align: center;
+  padding: 4px 8px;
+  border-radius: 6px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  white-space: nowrap;
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  margin-bottom: 6px;
+  z-index: 10;
+  transition: opacity 0.2s ease, visibility 0.2s ease;
+  pointer-events: none;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+}
+
+.sleep-bar .sleep-tooltip::after {
+  content: "";
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  margin-left: -4px;
+  border-width: 4px;
+  border-style: solid;
+  border-color: #1f2937 transparent transparent transparent;
+}
+
+.sleep-bar:hover .sleep-tooltip {
+  visibility: visible;
+  opacity: 1;
+}
+
+/* Legend Target */
+.sleep-legend {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.75rem;
+  color: #6b7280;
+  margin-top: 4px;
+}
+
+.target-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background-color: #f3e8a3; /* Titik kuning lembut sesuai acuan gambar */
+}

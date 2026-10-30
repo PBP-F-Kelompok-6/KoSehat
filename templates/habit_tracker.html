@@ -18,7 +18,7 @@
     </div>
     <div class="header-actions">
       <button class="btn-energy" id="btn-open-energy-modal">
-        Catat Energi
+        ⚡ Catat Energi
       </button>
       <button class="btn-primary" id="btn-open-modal">
         <span>+</span> Tambah kebiasaan
@@ -77,10 +77,26 @@
     </div>
 
     <div class="side-widgets-column">
-      <div class="side-widget-card">
-        <h4>Kualitas tidur</h4>
-        <p class="kpi-val" style="margin-top: 8px;">7j 24m</p>
-        <p class="kpi-sub">Target 7.5 jam tercapai</p>
+      <!-- Widget Kualitas Tidur -->
+      <div class="side-widget-card sleep-widget-card">
+        <div class="sleep-card-header">
+          <div>
+            <h4>Kualitas tidur</h4>
+            <p class="widget-subtitle">7 malam terakhir</p>
+          </div>
+          <button class="btn-dots-menu" id="btn-open-sleep-modal" title="Pengaturan & Catat Tidur">•••</button>
+        </div>
+
+        <div class="sleep-main-val font-serif-heading" id="sleep-last-night-val">0j 0m</div>
+
+        <!-- Grafik Batang 7 Malam Terakhir -->
+        <div class="sleep-chart-container" id="sleep-chart-container"></div>
+
+        <!-- Legend Target -->
+        <div class="sleep-legend">
+          <span class="target-dot"></span>
+          <span id="sleep-legend-target-text">Target 7,5 jam</span>
+        </div>
       </div>
 
       <div class="side-widget-card">
@@ -172,6 +188,38 @@
       <div style="display: flex; justify-content: flex-end; gap: 8px;">
         <button type="button" id="btn-close-add-focus-modal" style="padding: 8px 16px; border: none; background: #e5e7eb; border-radius: 8px; cursor: pointer;">Batal</button>
         <button type="submit" class="btn-primary">Catat Fokus</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Modal Form Pengaturan Kualitas Tidur -->
+<div class="modal-overlay" id="sleep-modal">
+  <div class="modal-box">
+    <h3>Pengaturan & Catat Tidur</h3>
+    <p style="font-size: 0.85rem; color: #666; margin-top: 4px;">Atur target durasi tidur dan catat durasi tidur malam terakhir Anda.</p>
+    <form id="form-log-sleep" style="margin-top: 16px;">
+      {% csrf_token %}
+      <div style="margin-bottom: 12px;">
+        <label style="font-size: 0.8rem; font-weight: 600;">Target Durasi Tidur (Jam)</label>
+        <input type="number" step="0.5" min="1" max="24" name="target_hours" id="input-sleep-target" value="7.5" required style="width: 100%; padding: 8px; border-radius: 8px; border: 1px solid #ccc; margin-top: 4px;">
+      </div>
+      <div style="margin-bottom: 20px;">
+        <label style="font-size: 0.8rem; font-weight: 600;">Durasi Tidur Malam Terakhir</label>
+        <div style="display: flex; gap: 8px; margin-top: 4px;">
+          <div style="flex: 1;">
+            <span style="font-size: 0.75rem; color: #666;">Jam</span>
+            <input type="number" min="0" max="23" name="sleep_hours" id="input-sleep-hours" value="7" required style="width: 100%; padding: 8px; border-radius: 8px; border: 1px solid #ccc; margin-top: 2px;">
+          </div>
+          <div style="flex: 1;">
+            <span style="font-size: 0.75rem; color: #666;">Menit</span>
+            <input type="number" min="0" max="59" name="sleep_minutes" id="input-sleep-minutes" value="24" required style="width: 100%; padding: 8px; border-radius: 8px; border: 1px solid #ccc; margin-top: 2px;">
+          </div>
+        </div>
+      </div>
+      <div style="display: flex; justify-content: flex-end; gap: 8px;">
+        <button type="button" id="btn-close-sleep-modal" style="padding: 8px 16px; border: none; background: #e5e7eb; border-radius: 8px; cursor: pointer;">Batal</button>
+        <button type="submit" class="btn-primary">Simpan Pengaturan</button>
       </div>
     </form>
   </div>

@@ -6,7 +6,9 @@ from django.views.decorators.http import require_POST, require_GET
 from django.contrib.auth.decorators import login_required
 from django.utils import timezone
 from .models import Habit, HabitLog, SleepLog, EnergyLog, UserStreak
-from .forms import HabitForm, EnergyLogForm, AddFocusTimeForm
+from .forms import HabitForm, EnergyLogForm, AddFocusTimeForm, SleepSettingForm
+
+DAY_INITIALS = {0: 'S', 1: 'S', 2: 'R', 3: 'K', 4: 'J', 5: 'S', 6: 'M'}
 
 def get_or_update_user_streak(user, today):
     streak_obj, created = UserStreak.objects.get_or_create(user=user)
@@ -53,7 +55,7 @@ def get_or_update_user_streak(user, today):
 
 def format_minutes(total_minutes):
     """Mengubah durasi menit menjadi format string 'Xj Ym' atau 'Ym'."""
-    if total_minutes is None:
+    if total_minutes is None or total_minutes < 0:
         total_minutes = 0
     hours = total_minutes // 60
     mins = total_minutes % 60
@@ -97,14 +99,45 @@ def get_habits_json(request):
     total_habits = len(habits_data)
     progress_percent = int((completed_count / total_habits * 100)) if total_habits > 0 else 0
 
-    # Hitung & Dapatkan status Streak
     streak_obj = get_or_update_user_streak(request.user, today)
-
     energy_log, _ = EnergyLog.objects.get_or_create(user=request.user, date=today)
     
     target_mins = energy_log.focus_minutes
     logged_mins = energy_log.logged_focus_minutes
     is_target_reached = logged_mins >= target_mins and target_mins > 0
+
+    # Data Kualitas Tidur 7 Malam Terakhir
+    default_sample_durations = [390, 430, 400, 460, 420, 480, 444] # Data dummy variatif untuk 7 malam
+    sleep_bars = []
+    
+    target_sleep_hours = 7.5
+    latest_sleep_log, _ = SleepLog.objects.get_or_create(user=request.user, date=today)
+    target_sleep_hours = latest_sleep_log.target_hours
+
+    for i in range(6, -1, -1):
+        day_date = today - timedelta(days=i)
+        s_log, created = SleepLog.objects.get_or_create(user=request.user, date=day_date)
+        
+        if created:
+            s_log.duration_minutes = default_sample_durations[6 - i]
+            s_log.target_hours = target_sleep_hours
+            s_log.save()
+
+        # Hitung tinggi bar dalam persentase
+        max_scale_mins = max(target_sleep_hours * 60 * 1.25, 600) # Skala maksimal sekitar 10 jam
+        height_pct = max(10, min(100, int((s_log.duration_minutes / max_scale_mins) * 100)))
+
+        sleep_bars.append({
+            'date': day_date.strftime('%Y-%m-%d'),
+            'day_initial': DAY_INITIALS[day_date.weekday()],
+            'duration_minutes': s_log.duration_minutes,
+            'duration_str': format_minutes(s_log.duration_minutes),
+            'height_percent': height_pct,
+            'is_latest': (i == 0)
+        })
+
+    latest_duration_str = format_minutes(latest_sleep_log.duration_minutes)
+    target_hours_formatted = f"{latest_sleep_log.target_hours:g}".replace('.', ',')
 
     return JsonResponse({
         'habits': habits_data,
@@ -120,6 +153,14 @@ def get_habits_json(request):
             'focus_time_str': format_minutes(logged_mins),
             'target_focus_str': format_minutes(target_mins),
             'is_target_reached': is_target_reached,
+            'sleep': {
+                'last_night_str': latest_duration_str,
+                'last_night_hours': latest_sleep_log.duration_minutes // 60,
+                'last_night_mins': latest_sleep_log.duration_minutes % 60,
+                'target_hours': latest_sleep_log.target_hours,
+                'target_str': f"{target_hours_formatted} jam",
+                'bars': sleep_bars,
+            }
         }
     }, status=200)
 
@@ -189,4 +230,33 @@ def add_focus_time_ajax(request):
             'focus_time_str': format_minutes(energy_log.logged_focus_minutes),
             'is_target_reached': is_target_reached,
         }, status=200)
+    return JsonResponse({'errors': form.errors.get_json_data()}, status=400)
+
+@login_required
+@require_POST
+def log_sleep_settings_ajax(request):
+    form = SleepSettingForm(request.POST)
+    if form.is_valid():
+        today = timezone.now().date()
+        target_h = form.cleaned_data['target_hours']
+        sleep_h = form.cleaned_data['sleep_hours']
+        sleep_m = form.cleaned_data['sleep_minutes']
+        total_mins = (sleep_h * 60) + sleep_m
+
+        # Perbarui log hari ini
+        sleep_log, _ = SleepLog.objects.get_or_create(user=request.user, date=today)
+        sleep_log.target_hours = target_h
+        sleep_log.duration_minutes = total_mins
+        sleep_log.save()
+
+        # Update target_hours pada log 7 hari terakhir agar konsisten
+        for i in range(1, 7):
+            past_date = today - timedelta(days=i)
+            SleepLog.objects.filter(user=request.user, date=past_date).update(target_hours=target_h)
+
+        return JsonResponse({
+            'message': 'Pengaturan & catatan tidur berhasil disimpan!',
+            'last_night_str': format_minutes(total_mins),
+        }, status=200)
+        
     return JsonResponse({'errors': form.errors.get_json_data()}, status=400)

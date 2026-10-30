@@ -11,4 +11,5 @@ urlpatterns = [
     path('api/delete/<int:habit_id>/', views.delete_habit_ajax, name='delete_habit'),
     path('api/energy/', views.log_energy_ajax, name='log_energy'),
     path('api/focus/add/', views.add_focus_time_ajax, name='add_focus_time'),
+    path('api/sleep/settings/', views.log_sleep_settings_ajax, name='log_sleep_settings'),
 ]

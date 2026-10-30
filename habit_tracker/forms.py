@@ -38,3 +38,12 @@ class AddFocusTimeForm(forms.Form):
         min_value=1,
         error_messages={'min_value': 'Durasi fokus minimal 1 menit.'}
     )
+
+class SleepSettingForm(forms.Form):
+    target_hours = forms.FloatField(
+        min_value=1.0,
+        max_value=24.0,
+        error_messages={'invalid': 'Masukkan target durasi tidur yang valid.'}
+    )
+    sleep_hours = forms.IntegerField(min_value=0, max_value=23)
+    sleep_minutes = forms.IntegerField(min_value=0, max_value=59)

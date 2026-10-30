@@ -143,6 +143,43 @@ async function loadHabits() {
       }
     }
 
+    // Update Card Kualitas Tidur (7 Malam Terakhir)
+    if (data.summary.sleep) {
+      const sleepVal = document.getElementById('sleep-last-night-val');
+      const sleepLegendTarget = document.getElementById('sleep-legend-target-text');
+      const chartContainer = document.getElementById('sleep-chart-container');
+
+      if (sleepVal) sleepVal.innerText = data.summary.sleep.last_night_str || '0j 0m';
+      if (sleepLegendTarget) sleepLegendTarget.innerText = `Target ${data.summary.sleep.target_str}`;
+
+      // Update input modal sleep
+      const inputTarget = document.getElementById('input-sleep-target');
+      const inputHours = document.getElementById('input-sleep-hours');
+      const inputMins = document.getElementById('input-sleep-minutes');
+
+      if (inputTarget) inputTarget.value = data.summary.sleep.target_hours;
+      if (inputHours) inputHours.value = data.summary.sleep.last_night_hours;
+      if (inputMins) inputMins.value = data.summary.sleep.last_night_mins;
+
+      // Render 7 Bars
+      if (chartContainer && data.summary.sleep.bars) {
+        chartContainer.innerHTML = '';
+        data.summary.sleep.bars.forEach(bar => {
+          const col = document.createElement('div');
+          col.className = 'sleep-bar-col';
+          col.innerHTML = `
+            <div class="sleep-bar-wrapper">
+              <div class="sleep-bar ${bar.is_latest ? 'latest' : ''}" style="height: ${bar.height_percent}%;">
+                <span class="sleep-tooltip">${bar.duration_str}</span>
+              </div>
+            </div>
+            <div class="sleep-day-label">${bar.day_initial}</div>
+          `;
+          chartContainer.appendChild(col);
+        });
+      }
+    }
+
     // Render Daftar Kebiasaan (Habit List)
     const container = document.getElementById('habit-list-container');
     if (!container) return;
@@ -291,6 +328,37 @@ document.addEventListener('DOMContentLoaded', () => {
         loadHabits();
       } else {
         showToast('Gagal menambahkan waktu fokus', 'error');
+      }
+    };
+  }
+
+  // Modal Sleep Settings Form
+  const modalSleep = document.getElementById('sleep-modal');
+  const btnOpenSleep = document.getElementById('btn-open-sleep-modal');
+  const btnCloseSleep = document.getElementById('btn-close-sleep-modal');
+  const formLogSleep = document.getElementById('form-log-sleep');
+
+  if (btnOpenSleep && modalSleep) btnOpenSleep.onclick = () => modalSleep.classList.add('active');
+  if (btnCloseSleep && modalSleep) btnCloseSleep.onclick = () => modalSleep.classList.remove('active');
+
+  if (formLogSleep) {
+    formLogSleep.onsubmit = async (e) => {
+      e.preventDefault();
+      const formData = new FormData(e.target);
+
+      const res = await fetch('/habit-tracker/api/sleep/settings/', {
+        method: 'POST',
+        headers: { 'X-CSRFToken': getCookie('csrftoken') },
+        body: formData
+      });
+
+      if (res.ok) {
+        const result = await res.json();
+        showToast(result.message || 'Pengaturan tidur disimpan!');
+        if (modalSleep) modalSleep.classList.remove('active');
+        loadHabits();
+      } else {
+        showToast('Gagal menyimpan pengaturan tidur', 'error');
       }
     };
   }

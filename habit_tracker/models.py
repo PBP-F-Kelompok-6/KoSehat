@@ -32,17 +32,20 @@ class HabitLog(models.Model):
 class SleepLog(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='sleep_logs')
     date = models.DateField()
-    duration_hours = models.FloatField(default=7.5)
-    quality_score = models.IntegerField(default=8)
+    duration_minutes = models.IntegerField(default=0, help_text="Durasi tidur dalam menit (default 7j 24m)")
+    target_hours = models.FloatField(default=7.5, help_text="Target tidur harian dalam jam")
 
     class Meta:
         unique_together = ('user', 'date')
+
+    def __str__(self):
+        return f"Sleep {self.date} - {self.user.username} ({self.duration_minutes}m)"
 
 class EnergyLog(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='energy_logs')
     date = models.DateField()
     energy_level = models.IntegerField(default=8, help_text="Skala 1 - 10")
-    focus_minutes = models.IntegerField(default=195, help_text="Target waktu fokus dalam menit")
+    focus_minutes = models.IntegerField(default=180, help_text="Target waktu fokus dalam menit")
     logged_focus_minutes = models.IntegerField(default=0, help_text="Waktu fokus yang telah dilalui dalam menit")
 
     class Meta:
