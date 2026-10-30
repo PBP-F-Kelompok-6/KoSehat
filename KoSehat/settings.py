@@ -53,6 +53,9 @@ INSTALLED_APPS = [
 
     # Modul KoSehat
     'recipe_catalog',
+
+    # Modul 4 — Dashboard & Impact Analytics
+    'app.dashboard_analytics',
 ]
 
 MIDDLEWARE = [

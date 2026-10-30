@@ -1,0 +1,60 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}Catatan Jalan Kaki - KoSehat{% endblock title %}
+{% block extra_css %}
+  <link rel="stylesheet" href="{% static 'dashboard_analytics/css/module4.css' %}?v=20261030-walking">
+{% endblock extra_css %}
+{% block content %}
+  <div class="m4-page m4-walking-page">
+    <header class="m4-hero">
+      <div>
+        <p class="m4-eyebrow">AKTIVITAS</p>
+        <h1>👣 Catatan berjalan kaki</h1>
+        <p class="m4-subtitle">Jarak dan langkah adalah estimasi dari durasi serta kecepatan yang kamu pilih.</p>
+      </div>
+      <a class="m4-primary-button" href="{% url 'dashboard_analytics:dashboard' %}">← Kembali ke Dashboard</a>
+    </header>
+    <section class="m4-panel m4-walking-list-panel" id="m4-walking-list" data-list-url="{% url 'dashboard_analytics:walking_activities_api' %}" data-update-url-template="{% url 'dashboard_analytics:update_walking_activity' 0 %}" data-delete-url-template="{% url 'dashboard_analytics:delete_walking_activity' 0 %}">
+      <div class="m4-panel-heading">
+        <div>
+          <h2>Semua catatan</h2>
+          <p>Diurutkan dari aktivitas terbaru.</p>
+        </div>
+      </div>
+      <div id="m4-walking-list-content"><p>Memuat catatan aktivitas...</p></div>
+    </section>
+  </div>
+  <div class="m4-modal-backdrop" id="m4-walking-edit-modal" hidden>
+    <section class="m4-modal" role="dialog" aria-modal="true" aria-labelledby="m4-walking-edit-title">
+      <button type="button" class="m4-modal-close" data-action="close-walking-edit" aria-label="Tutup">×</button>
+      <p class="m4-eyebrow">UBAH AKTIVITAS</p>
+      <h2 id="m4-walking-edit-title">Perbarui jalan kaki</h2>
+      <form id="m4-walking-edit-form">
+        {% csrf_token %}
+        <label for="m4-walking-edit-duration">Durasi berjalan (menit)</label>
+        <input id="m4-walking-edit-duration" name="duration_minutes" type="number" min="1" max="1440" step="1" required>
+        <fieldset class="m4-speed-options">
+          <legend>Kecepatan berjalan</legend>
+          <label><input type="radio" name="speed_level" value="slow"> Lambat <small>3 km/jam</small></label>
+          <label><input type="radio" name="speed_level" value="normal"> Normal <small>4,5 km/jam</small></label>
+          <label><input type="radio" name="speed_level" value="fast"> Cepat <small>5,5 km/jam</small></label>
+        </fieldset>
+        <label for="m4-walking-edit-date">Tanggal aktivitas</label>
+        <input id="m4-walking-edit-date" name="activity_date" type="date" max="{% now 'Y-m-d' %}" required>
+        <div class="m4-walking-preview" aria-live="polite">
+          <strong>Preview estimasi</strong>
+          <span id="m4-walking-edit-distance">± 0 km</span>
+          <span id="m4-walking-edit-steps">± 0 langkah</span>
+        </div>
+        <div class="m4-form-actions">
+          <button type="button" class="m4-cancel-button" data-action="close-walking-edit">Batal</button>
+          <button class="m4-primary-button" type="submit">Simpan perubahan</button>
+        </div>
+      </form>
+    </section>
+  </div>
+  <div class="m4-toast" id="m4-toast" role="status" aria-live="polite" hidden></div>
+{% endblock content %}
+{% block extra_js %}
+  <script src="{% static 'dashboard_analytics/js/module4.js' %}" defer></script>
+{% endblock extra_js %}

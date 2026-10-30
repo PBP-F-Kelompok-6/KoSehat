@@ -1,0 +1,1 @@
+"""Namespace aplikasi Django KoSehat."""

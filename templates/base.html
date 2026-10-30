@@ -47,7 +47,7 @@
           <nav class="nav-menu">
             <!-- Dashboard -->
             <a
-              href=""
+              href="{% url 'dashboard_analytics:dashboard' %}"
               class="nav-link {% if request.resolver_match.namespace == 'dashboard' or request.resolver_match.url_name == 'dashboard' %}active{% endif %}"
             >
               <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -79,8 +79,8 @@
 
             <!-- Habit Tracker -->
             <a
-              href=""
-              class="nav-link {% if request.resolver_match.namespace == 'habit_tracker' or request.resolver_match.url_name == 'habit_tracker' %}active{% endif %}"
+              href="{% url 'habit_tracker:index' %}"
+              class="nav-link {% if request.resolver_match.namespace == 'habit_tracker' %}active{% endif %}"
             >
               <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path
@@ -95,7 +95,7 @@
 
             <!-- Impact Analytics -->
             <a
-              href=""
+              href="{% url 'dashboard_analytics:impact_analytics' %}"
               class="nav-link {% if request.resolver_match.namespace == 'impact_analytics' or request.resolver_match.url_name == 'impact_analytics' %}active{% endif %}"
             >
               <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">

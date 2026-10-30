@@ -1,0 +1,381 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}
+  Dashboard - KoSehat
+{% endblock title %}
+{% block extra_css %}
+  <link rel="stylesheet" href="{% static 'dashboard_analytics/css/module4.css' %}?v=20261030-icons">
+{% endblock extra_css %}
+{% block content %}
+  <div class="m4-page m4-dashboard-page">
+    <header class="m4-hero">
+      <div>
+        <p class="m4-eyebrow">{{ dashboard.date|upper }}</p>
+        <h1>Halo, {{ dashboard.greeting_name }} — tubuhmu butuh ritme, bukan sempurna.</h1>
+        <p class="m4-subtitle">Pantau energi, susun makan, dan lihat dampak kecilmu untuk kampus yang lebih sehat.</p>
+      </div>
+      <div class="m4-header-actions">
+        <button class="m4-icon-button" type="button" aria-label="Notifikasi" data-action="notifications">🔔</button>
+        <a class="m4-primary-button" href="{% url 'habit_tracker:index' %}">＋ &nbsp;Catat kebiasaan</a>
+      </div>
+    </header>
+    <section class="m4-daily-banner">
+      <div>
+        <p>● &nbsp; RINGKASAN HARI INI</p>
+        <h2>{{ dashboard.daily_summary }}</h2>
+      </div>
+      
+      <div class="m4-score">
+        <strong>
+          {% if dashboard.score is not None %}
+            {{ dashboard.score }}
+          {% else %}
+            —
+          {% endif %}
+        </strong>
+        <small>SKOR SEHAT</small>
+      </div>
+
+      <div class="m4-streak">
+        <strong>🔥 {{ dashboard.streak }} hari konsisten</strong>
+        <span>Rangkaian dihitung dari catatan kebiasaan harianmu.</span>
+        <a href="#m4-habits" data-action="habit-detail">Lihat detail</a>
+      </div>
+
+    </section>
+    <section class="m4-stat-grid m4-dashboard-stats" aria-label="Statistik kesehatan hari ini">
+      <article class="m4-stat-card">
+        <span class="m4-stat-icon m4-icon-water">💧</span>
+        <p>Hidrasi</p>
+        <h2>{{ dashboard.hydration.value }}</h2>
+        <small>{{ dashboard.hydration.detail }}</small>
+      </article>
+
+      <article class="m4-stat-card">
+        <span class="m4-stat-icon m4-icon-moon">☾</span>
+        <p>Tidur</p>
+        <h2>{{ dashboard.sleep.value }}</h2>
+        <small>{{ dashboard.sleep.detail }}</small>
+      </article>
+
+      <article class="m4-stat-card">
+        <span class="m4-stat-icon m4-icon-steps">👣</span>
+        <p>Aktivitas</p>
+        <h2>{{ dashboard.walking.value }}</h2>
+        <small>{{ dashboard.walking.detail }}</small>
+        {% if user.is_authenticated %}
+          <div class="m4-walking-card-actions">
+            <button type="button" class="m4-text-button" data-action="add-walking">Catat jalan kaki</button>
+            <a class="m4-text-button" href="{% url 'dashboard_analytics:walking_activity_list' %}">Lihat catatan</a>
+          </div>
+        {% else %}
+          <small><a href="{% url 'user_profile:login' %}">Masuk</a> untuk mencatat aktivitas.</small>
+        {% endif %}
+      </article>
+
+      <article class="m4-stat-card">
+        <span class="m4-stat-icon m4-icon-fire">⚡️</span>
+        <p>Gerak aktif</p>
+        <h2>{{ dashboard.active.value }}</h2>
+        <small>{{ dashboard.active.detail }}</small>
+      </article>
+    </section>
+    <section class="m4-dashboard-layout">
+      <article class="m4-panel m4-routine-panel" id="m4-habits">
+        <div class="m4-panel-heading">
+          <div>
+            <h2>Ritme kebiasaan</h2>
+            <p>7 hari terakhir</p>
+          </div>
+          <button class="m4-more-button" type="button" aria-label="Opsi ritme" data-action="panel-options" data-panel="Ritme kebiasaan">•••</button>
+        </div>
+        <div class="m4-routine-content">
+          
+          
+          <div class="m4-week-chart">
+            <strong>
+              {% if dashboard.week_average is not None %}
+                {{ dashboard.week_average }}%
+              {% else %}
+                —
+              {% endif %}
+            </strong>
+
+            <div class="m4-week-bars">
+              {% for day in dashboard.habit_week %}
+                <div>
+                  <i
+                    style="height: {{ day.value }}%;"
+                    title="{% if day.has_data %}Progres {{ day.value }}%{% else %}Belum ada catatan{% endif %}"
+                  ></i>
+                  <small>{{ day.label }}</small>
+                </div>
+              {% endfor %}
+            </div>
+          </div>
+
+
+          
+          <div class="m4-habit-list">
+            {% for habit in dashboard.habit_list %}
+              <div>
+                <span>{{ habit.icon }}</span>
+                <p>
+                  <strong>{{ habit.title }}</strong>
+                  <small>{{ habit.detail }}</small>
+                </p>
+                <b class="{% if not habit.complete %}is-empty{% endif %}">
+                  {% if habit.complete %}✓{% endif %}
+                </b>
+              </div>
+            {% empty %}
+              <p>Belum ada kebiasaan aktif. Tambahkan kebiasaan di Habit Tracker.</p>
+            {% endfor %}
+          </div>
+
+        </div>
+        
+      </article>
+      
+      <article class="m4-panel m4-hydration-panel">
+        <div class="m4-panel-heading">
+          <div>
+            <h2>Hidrasi hari ini</h2>
+            <p>Target harian {{ dashboard.hydration_target }} ml</p>
+          </div>
+        </div>
+
+        <strong class="m4-water-number">
+          {{ dashboard.hydration_ml|default:0 }} ml
+        </strong>
+
+        <span class="m4-water-detail">
+          {{ dashboard.hydration_progress|default:0 }}% dari target harian
+        </span>
+
+        <svg
+          class="m4-water-line"
+          viewBox="0 0 100 35"
+          preserveAspectRatio="none"
+          role="img"
+          aria-label="Grafik akumulasi hidrasi sepanjang hari"
+        >
+          <polyline
+            points="{{ dashboard.hydration_line }}"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="0.7"
+            vector-effect="non-scaling-stroke"
+          />
+        </svg>
+        <div
+          class="m4-water-progress"
+          role="progressbar"
+          aria-label="Progres hidrasi hari ini"
+          aria-valuemin="0"
+          aria-valuemax="100"
+          aria-valuenow="{{ dashboard.hydration_progress|default:0 }}"
+        >
+          <i style="width: {{ dashboard.hydration_progress|default:0 }}%;"></i>
+        </div>
+
+      </article>
+
+    </section>
+    <section class="m4-dashboard-layout m4-dashboard-bottom">
+      <article class="m4-panel m4-meal-panel">
+        <div class="m4-panel-heading">
+          <div>
+            <h2>Meal planner hari ini</h2>
+            <p>Hari ini: Rp {{ dashboard.today_meal_cost }} • Minggu ini: Rp {{ dashboard.weekly_meal_cost }}</p>
+          </div>
+          <a class="m4-more-button" href="{% url 'meal_planner:index' %}" aria-label="Buka Meal Planner">Lihat semua</a>
+        </div>
+        <div class="m4-meal-cards">
+          {% for meal_slot in dashboard.meals %}
+            <div>
+              <p><span>{{ meal_slot.label }}</span></p>
+              {% for meal in meal_slot.entries %}
+                <strong>{{ meal.name }}</strong>
+                <small>Rp {{ meal.estimated_cost }}{% if meal.calories %} • {{ meal.calories }} kkal{% endif %}</small>
+              {% empty %}
+                <strong>Belum ada menu</strong>
+                <small>Tambahkan menu dari Meal Planner.</small>
+              {% endfor %}
+            </div>
+          {% endfor %}
+        </div>
+      </article>
+
+      <article class="m4-panel m4-average-meal-cost">
+        <div class="m4-panel-heading">
+          <div>
+            <h2>Rata-rata Biaya per Menu</h2>
+            <p>Rata-rata pengeluaran untuk setiap menu yang dicatat di Meal Planner.</p>
+          </div>
+        </div>
+        {% if dashboard.monthly_meal_average.has_data %}
+          <div class="m4-average-meal-cost-value">
+            <span>Rp</span>
+            <strong>Rp {{ dashboard.monthly_meal_average.average_cost_display }}</strong>
+          </div>
+          <dl class="m4-average-meal-cost-details">
+            <div>
+              <dt>Total menu tercatat</dt>
+              <dd>{{ dashboard.monthly_meal_average.menu_count }} menu</dd>
+            </div>
+            <div>
+              <dt>Total estimasi biaya</dt>
+              <dd>Rp {{ dashboard.monthly_meal_average.total_cost_display }}</dd>
+            </div>
+          </dl>
+        {% else %}
+          <div class="m4-average-meal-cost-value m4-average-meal-cost-empty">
+            <span>Rp</span>
+            <strong>Belum ada data</strong>
+          </div>
+          <p class="m4-average-meal-cost-empty-copy">Tambahkan menu di Meal Planner untuk melihat rata-rata biaya bulan ini.</p>
+        {% endif %}
+      </article>
+    </section>
+
+  <!-- Komunitas KoSehat -->
+  <section
+    class="m4-panel m4-community-panel"
+    id="m4-community"
+    data-can-post="{% if user.is_authenticated %}true{% else %}false{% endif %}"
+    data-delete-url-template="{% url 'dashboard_analytics:delete_community_comment' 0 %}"
+  >
+    <div class="m4-panel-heading">
+      <div>
+        <h2>Komunitas KoSehat 🌱</h2>
+        <p>Bagikan cerita dan dukung perjalanan hidup sehat satu sama lain.</p>
+      </div>
+      </div>
+
+      {% if user.is_authenticated %}
+        <button
+          type="button"
+          id="m4-community-toggle"
+          class="m4-community-toggle"
+          aria-expanded="false"
+          aria-controls="m4-community-form"
+        >
+          <span>＋</span> Ceritamu hari ini
+        </button>
+      {% else %}
+        <p><a href="{% url 'user_profile:login' %}">Masuk</a> untuk membagikan cerita atau membalas.</p>
+      {% endif %}
+
+      <form id="m4-community-form" hidden>
+        {% csrf_token %}
+        <textarea
+          id="m4-community-content"
+          name="content"
+          maxlength="1000"
+          rows="3"
+          placeholder="Apa progres sehat yang ingin kamu bagikan?"
+          required
+        ></textarea>
+
+        <div class="m4-community-form-actions">
+          <button type="button" id="m4-community-cancel">
+            Batal
+          </button>
+          <button class="m4-primary-button" type="submit">
+            Posting
+          </button>
+        </div>
+      </form>
+
+      <div id="m4-community-status" role="status" aria-live="polite"></div>
+
+      <div id="m4-community-list">
+        <p>Memuat postingan komunitas...</p>
+      </div>
+    </section>
+
+  </div>
+  <div class="m4-modal-backdrop" id="m4-walking-modal" hidden>
+    <section class="m4-modal" role="dialog" aria-modal="true" aria-labelledby="m4-walking-title">
+      <button type="button" class="m4-modal-close" data-action="close-walking-modal" aria-label="Tutup">×</button>
+      <p class="m4-eyebrow">AKTIVITAS BERJALAN KAKI</p>
+      <h2 id="m4-walking-title">Catat jalan kaki</h2>
+      <p class="m4-modal-copy">Jarak dan langkah adalah estimasi berdasarkan durasi, kecepatan, dan panjang langkah rata-rata 0,75 m.</p>
+      <form id="m4-walking-form" data-create-url="{% url 'dashboard_analytics:create_walking_activity' %}">
+        {% csrf_token %}
+        <label for="m4-walking-duration">Durasi berjalan (menit)</label>
+        <input id="m4-walking-duration" name="duration_minutes" type="number" min="1" max="1440" step="1" required inputmode="numeric" placeholder="Contoh: 30">
+        <fieldset class="m4-speed-options">
+          <legend>Kecepatan berjalan</legend>
+          <label><input type="radio" name="speed_level" value="slow"> Lambat <small>3 km/jam</small></label>
+          <label><input type="radio" name="speed_level" value="normal" checked> Normal <small>4,5 km/jam</small></label>
+          <label><input type="radio" name="speed_level" value="fast"> Cepat <small>5,5 km/jam</small></label>
+        </fieldset>
+        <label for="m4-walking-date">Tanggal aktivitas</label>
+        <input id="m4-walking-date" name="activity_date" type="date" value="{{ dashboard.today_iso }}" max="{{ dashboard.today_iso }}" required>
+        <div class="m4-walking-preview" aria-live="polite">
+          <strong>Preview estimasi</strong>
+          <span id="m4-walking-distance">± 0 km</span>
+          <span id="m4-walking-steps">± 0 langkah</span>
+        </div>
+        <div class="m4-form-actions">
+          <button type="button" class="m4-cancel-button" data-action="close-walking-modal">Batal</button>
+          <button class="m4-primary-button" type="submit">Simpan aktivitas</button>
+        </div>
+      </form>
+    </section>
+  </div>
+  <div class="m4-modal-backdrop" id="m4-habit-modal" hidden>
+
+    <section class="m4-modal" role="dialog" aria-modal="true" aria-labelledby="m4-modal-title">
+      <button type="button" class="m4-modal-close" data-action="close-modal" aria-label="Tutup">×</button>
+      
+      <p class="m4-eyebrow">CATAT PROGRES</p>
+      <h2 id="m4-modal-title">Catat kebiasaan hari ini</h2>
+      
+      <p class="m4-modal-copy">
+        Catatan kebiasaanmu akan tersimpan dan terhubung langsung
+        dengan Habit Tracker.
+      </p>
+
+      <form id="m4-habit-form">
+        {% csrf_token %}
+        <label for="m4-habit-type">Kebiasaan</label>
+       
+        <select id="m4-habit-type" name="habit_type" required>
+          <option value="water">Hidrasi (ml)</option>
+          <option value="steps">Jumlah langkah</option>
+          <option value="sleep">Durasi tidur (menit)</option>
+          <option value="active">Gerak aktif (menit)</option>
+        </select>
+
+        <label for="m4-habit-amount">Jumlah</label>
+        <input id="m4-habit-amount" name="amount" type="number" min="1" step="1" required placeholder="Contoh: 500">
+        <p class="m4-form-hint" id="m4-habit-hint">Masukkan total hidrasi hari ini dalam ml.</p>
+        <div class="m4-form-actions">
+        <button
+            type="button"
+            class="m4-cancel-button"
+            data-action="close-modal"
+        >
+            Batal
+        </button>
+
+        <button
+            class="m4-primary-button"
+            type="submit"
+        >
+            Simpan Catatan
+        </button>
+    </div>
+      </form>
+    </section>
+
+  </div>
+
+  <div class="m4-toast" id="m4-toast" role="status" aria-live="polite" hidden></div>
+{% endblock content %}
+{% block extra_js %}
+  <script src="{% static 'dashboard_analytics/js/module4.js' %}" defer></script>
+{% endblock extra_js %}
