@@ -10,6 +10,15 @@ from .services import get_or_fetch_recipes
 def is_admin(user):
     return user.is_staff or user.is_superuser
 
+def is_editor_or_superuser(user):
+    """
+    Memeriksa apakah pengguna sudah login dan merupakan admin
+    atau tergabung dalam Group 'Editor'.
+    """
+    return user.is_authenticated and (
+        is_admin(user) or user.groups.filter(name='Editor').exists()
+    )
+
 def recipe_catalog_view(request):
     recipes = get_or_fetch_recipes(number=12)
     
@@ -17,11 +26,14 @@ def recipe_catalog_view(request):
     display_recipes = recipes[1:7] if len(recipes) > 1 else recipes
     articles = EducationArticle.objects.all().order_by('-created_at')[:3]
 
+    is_editor = is_editor_or_superuser(request.user)
+
     context = {
         'recipes': display_recipes,
         'editor_choice': editor_choice,
         'articles': articles,
         'total_recipes': len(recipes),
+        'is_editor': is_editor,
     }
     return render(request, 'recipe_catalog.html', context)
 
@@ -142,6 +154,8 @@ def article_detail_api(request, article_id):
         }
     })
 
+@login_required
+@user_passes_test(is_editor_or_superuser)
 @require_POST
 def article_create_api(request):
     try:
@@ -155,6 +169,8 @@ def article_create_api(request):
         return JsonResponse({'status': 'success', 'message': 'Artikel berhasil dibuat', 'article_id': article.id})
     return JsonResponse({'status': 'error', 'errors': form.errors}, status=400)
 
+@login_required
+@user_passes_test(is_editor_or_superuser)
 @require_POST
 def article_update_api(request, article_id):
     article = get_object_or_404(EducationArticle, pk=article_id)
@@ -169,6 +185,8 @@ def article_update_api(request, article_id):
         return JsonResponse({'status': 'success', 'message': 'Artikel berhasil diperbarui'})
     return JsonResponse({'status': 'error', 'errors': form.errors}, status=400)
 
+@login_required
+@user_passes_test(is_editor_or_superuser)
 @require_POST
 def article_delete_api(request, article_id):
     article = get_object_or_404(EducationArticle, pk=article_id)
