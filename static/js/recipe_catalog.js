@@ -36,9 +36,19 @@ const articleFormModalTitle = document.getElementById("articleFormModalTitle");
 
 // URLs
 const articleDetailUrlTemplate = articleDetailModal ? articleDetailModal.getAttribute("data-detail-url") : "";
-  const articleCreateUrl = articleFormModal ? articleFormModal.getAttribute("data-create-url") : "";
-  const articleUpdateUrlTemplate = articleFormModal ? articleFormModal.getAttribute("data-update-url") : "";
-  const articleDeleteUrlTemplate = articleFormModal ? articleFormModal.getAttribute("data-delete-url") : "";
+const articleCreateUrl = articleFormModal ? articleFormModal.getAttribute("data-create-url") : "";
+const articleUpdateUrlTemplate = articleFormModal ? articleFormModal.getAttribute("data-update-url") : "";
+const articleDeleteUrlTemplate = articleFormModal ? articleFormModal.getAttribute("data-delete-url") : "";
+
+// Helper Pengganti URL Placeholder Aman
+function replaceUrlId(templateUrl, targetId) {
+  if (!templateUrl) return "";
+  if (templateUrl.includes("999999")) {
+    return templateUrl.replace("999999", targetId);
+  }
+  // Fallback jika masih menggunakan 0 di bagian akhir path
+  return templateUrl.replace(/\/0(\/|\?|$)/, `/${targetId}$1`);
+}
 
 function fetchFilteredRecipes(query = "", tag = "") {
     if (!baseUrl) {
@@ -125,8 +135,8 @@ let currentActiveRecipeId = null;
 
     currentActiveRecipeId = recipeId;
 
-    // Replace dummy '0' dengan recipeId aktual
-    const detailUrl = detailUrlTemplate.replace("0", recipeId);
+    // Replace dummy dengan recipeId aktual
+    const detailUrl = replaceUrlId(detailUrlTemplate, recipeId);
     
     // Tampilkan modal overlay & spinner loading
     modalOverlay.classList.add('active');
@@ -264,7 +274,7 @@ let currentActiveRecipeId = null;
       if (btnDeleteArticle) btnDeleteArticle.style.display = "block";
 
       if (articleDetailUrlTemplate) {
-        const url = articleDetailUrlTemplate.replace("0", articleId);
+        const url = replaceUrlId(articleDetailUrlTemplate, articleId);
         fetch(url)
           .then((res) => res.json())
           .then((data) => {
@@ -297,7 +307,7 @@ let currentActiveRecipeId = null;
       return;
     }
 
-    const url = articleDetailUrlTemplate.replace("0", articleId);
+    const url = replaceUrlId(articleDetailUrlTemplate, articleId);
     articleDetailModal.classList.add("active");
     articleDetailModal.setAttribute("aria-hidden", "false");
     
@@ -337,7 +347,7 @@ let currentActiveRecipeId = null;
       const isEdit = Boolean(articleId);
       
       const targetUrl = isEdit
-        ? (articleUpdateUrlTemplate ? articleUpdateUrlTemplate.replace("0", articleId) : "")
+        ? (articleUpdateUrlTemplate ? replaceUrlId(articleUpdateUrlTemplate, articleId) : "")
         : articleCreateUrl;
 
       if (!targetUrl) {
@@ -387,7 +397,7 @@ let currentActiveRecipeId = null;
       if (!articleId || !articleDeleteUrlTemplate) return;
 
       if (confirm("Apakah Anda yakin ingin menghapus artikel ini?")) {
-        const deleteUrl = articleDeleteUrlTemplate.replace("0", articleId);
+        const deleteUrl = replaceUrlId(articleDeleteUrlTemplate, articleId);
 
         fetch(deleteUrl, {
           method: "POST",

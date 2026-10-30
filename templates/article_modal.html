@@ -5,7 +5,7 @@
   id="articleDetailModal"
   class="modal-overlay"
   aria-hidden="true"
-  data-detail-url="{% url 'recipe_catalog:article_detail_api' 0 %}"
+  data-detail-url="{% url 'recipe_catalog:article_detail_api' 999999 %}"
 >
   <div class="modal-card article-detail-card" role="dialog" aria-modal="true">
     <button
@@ -73,8 +73,8 @@
   class="modal-overlay"
   aria-hidden="true"
   data-create-url="{% url 'recipe_catalog:article_create_api' %}"
-  data-update-url="{% url 'recipe_catalog:article_update_api' 0 %}"
-  data-delete-url="{% url 'recipe_catalog:article_delete_api' 0 %}"
+  data-update-url="{% url 'recipe_catalog:article_update_api' 999999 %}"
+  data-delete-url="{% url 'recipe_catalog:article_delete_api' 999999 %}"
 >
   <div class="modal-card article-form-card" role="dialog" aria-modal="true">
     <button
