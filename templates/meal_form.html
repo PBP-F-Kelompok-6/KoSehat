@@ -1,0 +1,45 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}{{ title|default:'Menu' }} - KoSehat{% endblock title %}
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/meal_planner.css' %}" />
+{% endblock extra_css %}
+
+{% block content %}
+<div class="mp-page">
+  <h2 class="font-serif-heading mp-title">{{ title|default:"Menu" }}</h2>
+
+  <form method="post" class="mp-card mp-form">
+    {% csrf_token %}
+    {% for field in form %}
+    <div class="mp-field {% if field.field.widget.input_type == 'checkbox' %}mp-field-check{% endif %}">
+      {% if field.field.widget.input_type == 'checkbox' %}
+      {{ field }}<label for="{{ field.id_for_label }}">{{ field.label }}</label>
+      {% else %}
+      <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+      {{ field }}
+      {% endif %}
+      {% for error in field.errors %}<small class="mp-error">{{ error }}</small>{% endfor %}
+    </div>
+    {% if field.name == 'calories' %}
+    <div class="mp-field">
+      <label for="ingredients-input">Hitung kalori otomatis</label>
+      <textarea id="ingredients-input" rows="3" placeholder="Satu bahan per baris: nama (bahasa Inggris), gram&#10;cooked white rice, 150&#10;egg, 50"></textarea>
+      <small class="mp-muted">Isi dalam gram, bukan butir (contoh: 1 butir telur &asymp; 50 g, 1 centong nasi &asymp; 100 g).</small>
+      <button type="button" id="calc-kcal" data-url="{% url 'meal_planner:estimate_calories' %}" class="mp-btn mp-btn-light" style="align-self: flex-start">Hitung kalori</button>
+      <small id="calc-result" class="mp-muted"></small>
+    </div>
+    {% endif %}
+    {% endfor %}
+
+    <div class="mp-form-actions">
+      <button type="submit" class="mp-btn">Simpan</button>
+      <a href="{% url 'meal_planner:index' %}" class="mp-btn mp-btn-light">Batal</a>
+    </div>
+  </form>
+</div>
+{% endblock content %}
+
+{% block extra_js %}
+<script src="{% static 'js/meal_form.js' %}" defer></script>
+{% endblock extra_js %}

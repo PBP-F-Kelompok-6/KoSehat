@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" role="img" aria-label="Biji siap tumbuh">
+  <style>
+    .pulse { transform-box: fill-box; transform-origin: center; animation: pulse 2.4s ease-in-out infinite; }
+    @keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.12); } }
+  </style>
+  <circle cx="60" cy="60" r="56" fill="#f4f3ea"/>
+  <ellipse cx="60" cy="90" rx="36" ry="12" fill="#8b6b4a"/>
+  <ellipse cx="60" cy="86" rx="31" ry="9" fill="#a07f5a"/>
+  <g class="pulse">
+    <ellipse cx="60" cy="74" rx="8" ry="11" fill="#c9a24a" transform="rotate(-12 60 74)"/>
+    <path d="M56.5 70 q3.5 -4.5 7 0" stroke="#8a6d1f" stroke-width="2" fill="none" stroke-linecap="round"/>
+  </g>
+</svg>

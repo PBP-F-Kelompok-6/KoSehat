@@ -14,6 +14,11 @@ from pathlib import Path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
+import os
+from dotenv import load_dotenv
+
+load_dotenv(BASE_DIR / '.env')
+USDA_API_KEY = os.environ.get('USDA_API_KEY') or 'DEMO_KEY'
 SPOONACULAR_API_KEY = 'fad7be18939e4bb18c2c714a33080a66'
 
 # Quick-start development settings - unsuitable for production
@@ -41,6 +46,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'meal_planner',
     'django_cas_ng',
     'user_profile',
 
@@ -115,7 +121,8 @@ AUTH_PASSWORD_VALIDATORS = [
 
 LANGUAGE_CODE = 'en-us'
 
-TIME_ZONE = 'UTC'
+
+TIME_ZONE = 'Asia/Jakarta'      # ganti dari 'UTC'
 
 USE_I18N = True
 
@@ -138,14 +145,9 @@ STATIC_ROOT = BASE_DIR / 'staticfiles'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-AUTHENTICATION_BACKENDS = (
+AUTHENTICATION_BACKENDS = [
     'django.contrib.auth.backends.ModelBackend',
-    'django_cas_ng.backends.CASBackend',
-)
+]
 
-CAS_SERVER_URL = 'https://sso.ui.ac.id/cas/2'
-CAS_VERSION = '3'
-CAS_LOGOUT_COMPLETELY = True
-CAS_STORE_NEXT_SETTINGS = True
 LOGIN_URL = '/auth/login/'
 LOGIN_REDIRECT_URL = '/auth/profile/'
