@@ -99,22 +99,73 @@
 }
 
 .kpi-card .kpi-label {
-  font-size: 0.8rem;
+  font-size: 0.88rem;
   color: var(--color-text-muted);
   font-weight: 500;
   margin-bottom: 8px;
 }
 
+.kpi-card-topline {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.kpi-icon {
+  display: inline-grid;
+  width: 30px;
+  height: 30px;
+  place-items: center;
+  border-radius: 9px;
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+.kpi-icon-streak {
+  color: #8b6421;
+  background: #f1e3c5;
+}
+
+.kpi-icon-habit {
+  color: #617526;
+  background: #e6efd0;
+}
+
+.kpi-icon-focus {
+  color: #547b88;
+  background: #deedf0;
+}
+
 .kpi-card .kpi-val {
-  font-size: 1.75rem;
+  font-size: 2rem;
+  line-height: 1.15;
   font-weight: 700;
   color: var(--color-text-dark);
 }
 
 .kpi-card .kpi-sub {
-  font-size: 0.75rem;
+  font-size: 0.82rem;
   color: var(--color-text-muted);
   margin-top: 4px;
+}
+
+.kpi-mini-progress {
+  width: 100%;
+  height: 5px;
+  margin-top: 9px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: #edf0e3;
+}
+
+.kpi-mini-progress span {
+  display: block;
+  width: 0;
+  height: 100%;
+  border-radius: inherit;
+  background: #8da432;
+  transition: width 0.3s ease;
 }
 
 /* Layout Content 2 Kolom */
@@ -132,15 +183,49 @@
   border: 1px solid #e5e7eb;
 }
 
+.habit-progress-track {
+  margin: 16px 0;
+}
+
 .habit-row {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 14px 16px;
+  padding: 12px 14px;
   border: 1px solid #f0f0f0;
   border-radius: var(--radius-md);
   margin-bottom: 10px;
   transition: border-color 0.2s;
+}
+
+.habit-row:hover {
+  border-color: #c8d294;
+  box-shadow: 0 4px 14px rgba(63, 74, 23, 0.06);
+}
+
+.habit-category-icon {
+  flex: 0 0 34px;
+  width: 34px;
+  height: 34px;
+  margin-right: 12px;
+  border-radius: 10px;
+  display: grid;
+  place-items: center;
+  background: #f0f4dc;
+  color: #708a28;
+  font-size: 1.05rem;
+}
+
+.habit-category-icon img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: inherit;
+}
+
+.habit-info {
+  flex: 1;
+  min-width: 0;
 }
 
 .habit-row.completed {
@@ -169,6 +254,15 @@
   cursor: pointer;
   background: none;
   transition: all 0.2s;
+}
+
+.checkbox-circle:focus-visible,
+.btn-primary:focus-visible,
+.btn-dots-menu:focus-visible,
+.btn-add-focus-trigger:focus-visible,
+.hydration-actions button:focus-visible {
+  outline: 3px solid #d1b94a;
+  outline-offset: 2px;
 }
 
 .checkbox-circle.checked {
@@ -211,6 +305,53 @@
   border-radius: var(--radius-lg);
   width: 100%;
   max-width: 480px;
+}
+
+.modal-description {
+  margin: 6px 0 18px;
+  color: var(--color-text-muted);
+  font-size: 0.85rem;
+}
+
+.modal-box form > label {
+  display: block;
+  margin-bottom: 6px;
+  color: var(--color-text-dark);
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.modal-box form > input {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 11px 12px;
+  border: 1px solid #d5d9c5;
+  border-radius: 10px;
+  color: var(--color-text-dark);
+  background: var(--color-white);
+  font: inherit;
+}
+
+.modal-box form > input:focus {
+  outline: 3px solid rgba(141, 164, 50, 0.25);
+  border-color: #8da432;
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 22px;
+}
+
+.btn-secondary {
+  padding: 10px 16px;
+  border: 1px solid #dfe3d0;
+  border-radius: var(--radius-full);
+  color: var(--color-text-dark);
+  background: #f1f2ec;
+  cursor: pointer;
+  font-weight: 600;
 }
 
 .toast-container {
@@ -351,7 +492,15 @@
 }
 
 .habit-progress-summary strong {
-  color: var(--color-text-dark);
+  display: inline-flex;
+  width: 64px;
+  height: 64px;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 64px;
+  border-radius: 16px;
+  background: var(--bg-sidebar);
+  color: var(--color-white);
   font-size: 1.6rem;
 }
 
@@ -462,7 +611,7 @@
 }
 
 .kpi-sub-target {
-  font-size: 0.75rem;
+  font-size: 0.82rem;
   color: #6b7280;
   margin-top: 4px;
 }
@@ -474,6 +623,57 @@
   display: flex;
   flex-direction: column;
   justify-content: space-between;
+}
+
+@media (max-width: 900px) {
+  .tracker-header {
+    gap: 20px;
+  }
+
+  .tracker-title-group h2 {
+    font-size: 1.85rem;
+  }
+
+  .tracker-body-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 640px) {
+  .tracker-header {
+    flex-direction: column;
+  }
+
+  .header-actions {
+    width: 100%;
+  }
+
+  .header-actions .btn-primary {
+    flex: 1;
+    justify-content: center;
+  }
+
+  .kpi-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .day-selector-strip {
+    gap: 6px;
+  }
+
+  .day-card {
+    padding: 10px 4px;
+  }
+
+  .habit-section-card,
+  .side-widget-card,
+  .weekly-consistency-card {
+    padding: 16px;
+  }
+
+  .weekly-consistency-chart {
+    gap: 6px;
+  }
 }
 
 .sleep-card-header {
@@ -507,7 +707,9 @@
 }
 
 .sleep-main-val {
-  font-size: 1.875rem;
+  font-family: var(--font-sans);
+  font-size: 1.75rem;
+  line-height: 1.2;
   font-weight: 700;
   color: var(--color-ink, #1f2937);
   margin: 10px 0 14px 0;
@@ -661,4 +863,141 @@
   color: #3f4a17;
   background: #f7f8ed;
   cursor: pointer;
+}
+
+.hydration-bottle {
+  position: relative;
+  width: 72px;
+  height: 140px;
+  margin: 14px auto 12px;
+}
+
+.hydration-bottle-cap {
+  position: relative;
+  z-index: 2;
+  width: 25px;
+  height: 11px;
+  margin: 0 auto -1px;
+  border: 2px solid #6d9bb7;
+  border-radius: 4px 4px 2px 2px;
+  background: repeating-linear-gradient(
+    90deg,
+    #d9edf6 0 3px,
+    #9bc8df 3px 5px
+  );
+}
+
+.hydration-bottle-neck {
+  position: relative;
+  z-index: 1;
+  width: 30px;
+  height: 18px;
+  margin: 0 auto -2px;
+  border: 3px solid #78a9c7;
+  border-bottom: 0;
+  border-radius: 4px 4px 0 0;
+  background: #e5f2f8;
+}
+
+.hydration-bottle-body {
+  position: relative;
+  height: 108px;
+  overflow: hidden;
+  border: 3px solid #78a9c7;
+  border-radius: 19px 19px 23px 23px;
+  background:
+    repeating-linear-gradient(
+      90deg,
+      rgba(255, 255, 255, 0.28) 0,
+      rgba(255, 255, 255, 0.28) 2px,
+      rgba(97, 157, 190, 0.1) 3px,
+      rgba(97, 157, 190, 0.1) 6px
+    ),
+    #e5f2f8;
+}
+
+.hydration-bottle-body::before {
+  position: absolute;
+  top: 0;
+  right: 4px;
+  left: 4px;
+  height: 17px;
+  border-bottom: 2px solid rgba(120, 169, 199, 0.55);
+  border-radius: 50%;
+  content: "";
+  pointer-events: none;
+  z-index: 2;
+}
+
+.hydration-bottle-label {
+  position: absolute;
+  right: 0;
+  bottom: 35px;
+  left: 0;
+  z-index: 3;
+  padding: 5px 2px;
+  color: #3f4a17;
+  background: #f3df83;
+  font-size: 0.52rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-align: center;
+}
+
+.hydration-bottle-water {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  height: 100%;
+  border-radius: 9px 9px 8px 8px;
+  background:
+    repeating-linear-gradient(
+      90deg,
+      rgba(255, 255, 255, 0.18) 0,
+      rgba(255, 255, 255, 0.18) 2px,
+      rgba(54, 126, 168, 0.12) 3px,
+      rgba(54, 126, 168, 0.12) 6px
+    ),
+    #8fc4df;
+  transition: height 0.45s ease, background-color 0.35s ease;
+}
+
+.hydration-bottle.target-reached .hydration-bottle-cap,
+.hydration-bottle.target-reached .hydration-bottle-neck,
+.hydration-bottle.target-reached .hydration-bottle-body {
+  border-color: #d6b84c;
+}
+
+.hydration-bottle.target-reached .hydration-bottle-neck {
+  background: #f3df83;
+}
+
+.hydration-bottle.target-reached .hydration-bottle-cap {
+  background: repeating-linear-gradient(
+    90deg,
+    #fff0a6 0 3px,
+    #d6b84c 3px 5px
+  );
+}
+
+.hydration-bottle.target-reached .hydration-bottle-water {
+  height: 0;
+}
+
+.hydration-bottle.target-reached .hydration-bottle-body {
+  background:
+    repeating-linear-gradient(
+      90deg,
+      rgba(255, 255, 255, 0.22) 0,
+      rgba(255, 255, 255, 0.22) 2px,
+      rgba(190, 153, 45, 0.1) 3px,
+      rgba(190, 153, 45, 0.1) 6px
+    ),
+    #f3df83;
+}
+
+.hydration-bottle.target-reached .hydration-bottle-label {
+  color: #fffdf1;
+  background: #d6b84c;
 }

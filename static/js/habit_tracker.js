@@ -22,6 +22,14 @@ function escapeHtml(str) {
     .replaceAll("'", '&#39;');
 }
 
+const habitIcons = {
+  water: '/static/images/habit-icons/water.png',
+  food: '/static/images/habit-icons/food.png',
+  exercise: '/static/images/habit-icons/exercise.png',
+  sleep: '/static/images/habit-icons/sleep.png',
+  mindfulness: '/static/images/habit-icons/mindfulness.png'
+};
+
 function showToast(message, type = 'success') {
   const container = document.getElementById('toast-container');
   if (!container) return;
@@ -99,6 +107,8 @@ async function loadHabits() {
     const kpiRemaining = document.getElementById('kpi-remaining');
     const progressBar = document.getElementById('habit-progress-bar');
     const progressPercent = document.getElementById('habit-progress-percent');
+    const completedProgress = document.getElementById('kpi-completed-progress');
+    const focusProgress = document.getElementById('kpi-focus-progress');
 
     // KPI Focus Elements
     const kpiFocus = document.getElementById('kpi-focus');
@@ -117,6 +127,9 @@ async function loadHabits() {
     if (kpiCompleted) kpiCompleted.innerText = `${data.summary.completed} / ${data.summary.total}`;
     if (kpiRemaining) kpiRemaining.innerText = `${data.summary.total - data.summary.completed} target belum selesai`;
     if (progressBar) progressBar.style.width = `${data.summary.progress_percent}%`;
+    if (completedProgress) {
+      completedProgress.style.width = `${data.summary.progress_percent}%`;
+    }
     if (progressPercent) {
       progressPercent.innerText = `${data.summary.progress_percent}%`;
     }
@@ -155,7 +168,8 @@ async function loadHabits() {
     if (hydration) {
       const amount = document.getElementById('hydration-amount');
       const remaining = document.getElementById('hydration-remaining');
-      const progress = document.getElementById('hydration-progress');
+      const hydrationBottle = document.getElementById('hydration-bottle');
+      const hydrationBottleWater = document.getElementById('hydration-bottle-water');
       const hydrationStatus = document.getElementById('hydration-status');
 
       if (amount) amount.innerText = `${hydration.amount_ml} ml`;
@@ -169,8 +183,12 @@ async function loadHabits() {
           ? '<span class="target-badge">✓ Target tercapai!</span>'
           : '';
       }
-      if (progress) {
-        progress.style.width = `${hydration.progress_percent}%`;
+      if (hydrationBottleWater) {
+        const remainingPercent = Math.max(0, 100 - hydration.progress_percent);
+        hydrationBottleWater.style.height = `${remainingPercent}%`;
+      }
+      if (hydrationBottle) {
+        hydrationBottle.classList.toggle('target-reached', hydration.target_reached);
       }
     }
 
@@ -178,6 +196,15 @@ async function loadHabits() {
       kpiFocusTargetText.innerText = `Target: ${data.summary.target_focus_str || '0m'}`;
       const inputFocusTarget = document.getElementById('input-focus-minutes');
       if (inputFocusTarget) inputFocusTarget.value = data.summary.target_focus_minutes;
+    }
+
+    if (focusProgress) {
+      const target = Number(data.summary.target_focus_minutes || 0);
+      const logged = Number(data.summary.logged_focus_minutes || 0);
+      const focusPercent = target > 0
+        ? Math.min(100, Math.round((logged / target) * 100))
+        : 0;
+      focusProgress.style.width = `${focusPercent}%`;
     }
 
     if (badgeContainer) {
@@ -238,7 +265,11 @@ async function loadHabits() {
     data.habits.forEach(h => {
       const row = document.createElement('div');
       row.className = `habit-row ${h.is_completed ? 'completed' : ''}`;
+      const habitIcon = habitIcons[h.category] || habitIcons.mindfulness;
       row.innerHTML = `
+        <div class="habit-category-icon" aria-hidden="true">
+          <img src="${habitIcon}" alt="">
+        </div>
         <div class="habit-info">
           <h4>${escapeHtml(h.title)}</h4>
           <p>${h.current_value} / ${h.target_value} ${escapeHtml(h.unit)} ${h.logged_time ? '• pukul ' + h.logged_time : ''}</p>
@@ -282,20 +313,33 @@ async function deleteHabit(habitId) {
   }
 }
 
-async function addHabitProgress(habitId) {
-  const value = prompt('Masukkan tambahan progress:');
-  if (value === null || value.trim() === '') return;
+let activeHabitProgressId = null;
 
-  const parsedValue = Number(value);
-  if (!Number.isInteger(parsedValue) || parsedValue < 1) {
+function addHabitProgress(habitId) {
+  const modal = document.getElementById('habit-progress-modal');
+  const input = document.getElementById('input-habit-progress');
+  if (!modal || !input) return;
+
+  activeHabitProgressId = habitId;
+  input.value = '';
+  modal.classList.add('active');
+  input.focus();
+}
+
+async function submitHabitProgress() {
+  const input = document.getElementById('input-habit-progress');
+  const value = Number(input.value);
+
+  if (!Number.isInteger(value) || value < 1) {
     showToast('Progress harus berupa bilangan positif', 'error');
+    input.focus();
     return;
   }
 
   const formData = new FormData();
-  formData.append('additional_value', parsedValue);
+  formData.append('additional_value', value);
 
-  const res = await fetch(`/habit-tracker/api/progress/${habitId}/`, {
+  const res = await fetch(`/habit-tracker/api/progress/${activeHabitProgressId}/`, {
     method: 'POST',
     headers: { 'X-CSRFToken': getCookie('csrftoken') },
     body: formData
@@ -303,6 +347,7 @@ async function addHabitProgress(habitId) {
 
   if (res.ok) {
     showToast('Progress kebiasaan diperbarui!');
+    document.getElementById('habit-progress-modal').classList.remove('active');
     loadHabits();
   } else {
     showToast('Gagal memperbarui progress', 'error');
@@ -330,6 +375,21 @@ async function addHydration(amountMl) {
 document.addEventListener('DOMContentLoaded', () => {
   renderWeeklyCalendar();
   loadHabits();
+
+  const habitProgressModal = document.getElementById('habit-progress-modal');
+  const habitProgressForm = document.getElementById('form-habit-progress');
+  const closeHabitProgress = document.getElementById('btn-close-habit-progress');
+
+  if (closeHabitProgress && habitProgressModal) {
+    closeHabitProgress.onclick = () => habitProgressModal.classList.remove('active');
+  }
+
+  if (habitProgressForm) {
+    habitProgressForm.onsubmit = async (event) => {
+      event.preventDefault();
+      await submitHabitProgress();
+    };
+  }
 
   // Modal Habit Form
   const modalHabit = document.getElementById('habit-modal');

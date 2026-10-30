@@ -29,21 +29,32 @@
   <!-- KPI Cards -->
   <div class="kpi-grid">
     <div class="kpi-card">
-      <div class="kpi-label">Streak aktif</div>
+      <div class="kpi-card-topline">
+        <div class="kpi-label">Streak aktif</div>
+        <span class="kpi-icon kpi-icon-streak" aria-hidden="true">✦</span>
+      </div>
       <div class="kpi-val" id="kpi-streak">0 hari</div>
       <div class="kpi-sub" id="kpi-streak-sub">Rekor terbaik: 0 hari</div>
     </div>
     <div class="kpi-card">
-      <div class="kpi-label">Kebiasaan selesai</div>
+      <div class="kpi-card-topline">
+        <div class="kpi-label">Kebiasaan selesai</div>
+        <span class="kpi-icon kpi-icon-habit" aria-hidden="true">✓</span>
+      </div>
       <div class="kpi-val" id="kpi-completed">0 / 0</div>
+      <div class="kpi-mini-progress"><span id="kpi-completed-progress"></span></div>
       <div class="kpi-sub" id="kpi-remaining">0 target belum selesai</div>
     </div>
     <div class="kpi-card">
       <div class="kpi-card-focus-header">
         <div>
-          <div class="kpi-label">Waktu fokus</div>
+          <div class="kpi-card-topline">
+            <div class="kpi-label">Waktu fokus</div>
+            <span class="kpi-icon kpi-icon-focus" aria-hidden="true">◷</span>
+          </div>
           <div class="kpi-val" id="kpi-focus">0m</div>
           <div class="kpi-sub-target" id="kpi-focus-target-text">Target: 0m</div>
+          <div class="kpi-mini-progress"><span id="kpi-focus-progress"></span></div>
           <div id="kpi-focus-badge-container"></div>
         </div>
         <button class="btn-dots-menu" id="btn-open-energy-modal" title="Pengaturan waktu fokus">•••</button>
@@ -57,13 +68,13 @@
     <div class="habit-section-card">
       <div class="habit-section-header">
         <h3>Kebiasaan hari ini</h3>
-        <button class="btn-dots-menu" id="btn-open-modal" title="Tambah kebiasaan">•••</button>
+        <button class="btn-dots-menu" type="button" id="btn-open-modal" title="Tambah kebiasaan" aria-label="Tambah kebiasaan">•••</button>
       </div>
       <div class="habit-progress-summary">
         <strong id="habit-progress-percent">0%</strong>
         <span>kebiasaan selesai hari ini</span>
       </div>
-      <div class="progress-bar-bg" style="margin: 16px 0;">
+      <div class="progress-bar-bg habit-progress-track">
         <div class="progress-bar-fill" id="habit-progress-bar" style="width: 0%;"></div>
       </div>
       <div id="habit-list-container"></div>
@@ -80,7 +91,7 @@
           <button class="btn-dots-menu" id="btn-open-sleep-modal" title="Pengaturan & Catat Tidur">•••</button>
         </div>
 
-        <div class="sleep-main-val font-serif-heading" id="sleep-last-night-val">0j 0m</div>
+        <div class="sleep-main-val" id="sleep-last-night-val">0j 0m</div>
 
         <!-- Grafik Batang 7 Malam Terakhir -->
         <div class="sleep-chart-container" id="sleep-chart-container"></div>
@@ -95,10 +106,15 @@
       <div class="side-widget-card">
         <h4>Hidrasi Harian</h4>
         <p class="kpi-val" id="hydration-amount" style="margin-top: 8px;">0 ml</p>
-        <div class="progress-bar-bg">
-          <div class="progress-bar-fill" id="hydration-progress" style="width: 0%;"></div>
+        <div class="hydration-bottle" id="hydration-bottle" role="img" aria-label="Progress hidrasi">
+          <div class="hydration-bottle-cap"></div>
+          <div class="hydration-bottle-neck"></div>
+          <div class="hydration-bottle-body">
+            <div class="hydration-bottle-water" id="hydration-bottle-water"></div>
+            <div class="hydration-bottle-label">KoSehat</div>
+          </div>
         </div>
-        <p class="kpi-sub" id="hydration-remaining">Sisa 2.000 ml</p>
+        <p class="kpi-sub" id="hydration-remaining">Sisa 2.500 ml</p>
         <div id="hydration-status"></div>
         <div class="hydration-actions">
           <button type="button" onclick="addHydration(250)">+250 ml</button>
@@ -151,6 +167,23 @@
       <div style="display: flex; justify-content: flex-end; gap: 8px;">
         <button type="button" id="btn-close-modal" style="padding: 8px 16px; border: none; background: #e5e7eb; border-radius: 8px; cursor: pointer;">Batal</button>
         <button type="submit" class="btn-primary">Simpan</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Modal Form Tambah Progress Habit -->
+<div class="modal-overlay" id="habit-progress-modal">
+  <div class="modal-box">
+    <h3>Tambah progress kebiasaan</h3>
+    <p class="modal-description">Masukkan progress yang baru saja kamu lakukan.</p>
+    <form id="form-habit-progress">
+      {% csrf_token %}
+      <label for="input-habit-progress">Tambahan progress</label>
+      <input type="number" id="input-habit-progress" min="1" required>
+      <div class="modal-actions">
+        <button type="button" class="btn-secondary" id="btn-close-habit-progress">Batal</button>
+        <button type="submit" class="btn-primary">Tambah</button>
       </div>
     </form>
   </div>
