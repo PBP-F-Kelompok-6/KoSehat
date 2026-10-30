@@ -1,19 +1,34 @@
 import csv
 import json
 
-from datetime import timedelta
+from datetime import date, timedelta
 
 from django.db.models import Count, Sum
 from django.contrib.auth import get_user_model
 
-from app.meal_planner.models import Meal
+from meal_planner.models import Meal
 from django.http import HttpResponse, JsonResponse
-from django.shortcuts import render
+from django.shortcuts import get_object_or_404, render
 from django.utils import timezone
+from django.contrib.auth.decorators import login_required
 from django.views.decorators.http import require_GET, require_POST
 
-from .data import IMPACT_SOURCE_COLORS, IMPACT_TARGETS
-from .models import HabitEntry, ImpactEntry, CommunityComment
+from .data import IMPACT_SOURCE_COLORS
+from .models import (
+    HabitEntry,
+    ImpactEntry,
+    CommunityComment,
+    WeeklyBudget,
+    WalkingActivity,
+)
+
+from habit_tracker.models import (
+    Habit,
+    HabitLog,
+    HydrationLog,
+    SleepLog,
+    UserStreak,
+)
 
 
 PERIOD_LABELS = {
@@ -58,6 +73,17 @@ MONTH_NAMES = (
     "Desember",
 )
 
+WALKING_SPEEDS = {
+    "slow": {"label": "Lambat", "kmh": 3.0},
+    "normal": {"label": "Normal", "kmh": 4.5},
+    "fast": {"label": "Cepat", "kmh": 5.5},
+}
+WALKING_STEP_LENGTH_METERS = 0.75
+MAX_WALKING_DURATION_MINUTES = 1440
+
+def _format_rupiah_number(value):
+    return f"{value:,}".replace(",", ".")
+
 
 def _anonymous_session_key(request):
     """Return a durable guest identifier without combining guest records."""
@@ -88,18 +114,67 @@ def _entry_owner(request):
     }
 
 def _meal_user(request):
-    """Gunakan akun yang sama dengan Meal Planner."""
-    if request.user.is_authenticated:
-        return request.user
-
-    user, _ = get_user_model().objects.get_or_create(
-        username="demo"
-    )
-    return user
+    """Meal Planner bersifat privat; tamu tidak pernah memakai data demo."""
+    return request.user if request.user.is_authenticated else None
 
 
 def _format_number(value):
     return f"{value:,}".replace(",", ".")
+
+
+def _walking_estimate(duration_minutes, speed_level):
+    """Hitung perkiraan dari konstanta Modul 4, bukan dari input klien."""
+    speed = WALKING_SPEEDS[speed_level]["kmh"]
+    distance_km = speed * duration_minutes / 60
+    return {
+        "distance_km": round(distance_km, 2),
+        "steps": round(distance_km * 1000 / WALKING_STEP_LENGTH_METERS),
+    }
+
+
+def _walking_activity_data(activity):
+    estimate = _walking_estimate(activity.duration_minutes, activity.speed_level)
+    return {
+        "id": activity.pk,
+        "duration_minutes": activity.duration_minutes,
+        "speed_level": activity.speed_level,
+        "speed_label": WALKING_SPEEDS[activity.speed_level]["label"],
+        "speed_kmh": WALKING_SPEEDS[activity.speed_level]["kmh"],
+        "activity_date": activity.activity_date.isoformat(),
+        "distance_km": estimate["distance_km"],
+        "steps": estimate["steps"],
+    }
+
+
+def _walking_payload_or_error(payload):
+    if payload is None:
+        return None, "Format data tidak valid."
+
+    try:
+        duration_minutes = int(payload.get("duration_minutes"))
+    except (TypeError, ValueError):
+        return None, "Durasi berjalan harus berupa bilangan bulat."
+
+    speed_level = payload.get("speed_level")
+    if speed_level not in WALKING_SPEEDS:
+        return None, "Pilihan kecepatan tidak valid."
+
+    raw_date = payload.get("activity_date")
+    try:
+        activity_date = date.fromisoformat(raw_date)
+    except (TypeError, ValueError):
+        return None, "Tanggal aktivitas tidak valid."
+
+    if not 1 <= duration_minutes <= MAX_WALKING_DURATION_MINUTES:
+        return None, f"Durasi harus antara 1 dan {MAX_WALKING_DURATION_MINUTES} menit."
+    if activity_date > timezone.localdate():
+        return None, "Tanggal aktivitas tidak boleh berada di masa depan."
+
+    return {
+        "duration_minutes": duration_minutes,
+        "speed_level": speed_level,
+        "activity_date": activity_date,
+    }, None
 
 
 def _first_day_months_ago(today, months):
@@ -133,95 +208,95 @@ def _previous_period_bounds(period_start, period_end):
     return previous_start, previous_end
 
 
-def _habit_totals(entries):
-    totals = {habit_type: 0 for habit_type in HABIT_TARGETS}
-
-    for row in entries.values("habit_type").annotate(total=Sum("amount")):
-        totals[row["habit_type"]] = row["total"] or 0
-
-    return totals
-
-
-def _hydration_chart(entries, total_water):
-    points = ["0,35"]
-    cumulative_water = 0
-    maximum_water = max(HABIT_TARGETS["water"], total_water)
-
-    for entry in entries.filter(habit_type="water").order_by("created_at"):
-        cumulative_water += entry.amount
-        local_time = timezone.localtime(entry.created_at)
-        x = (local_time.hour + local_time.minute / 60) / 24 * 100
-        y = 35 - cumulative_water / maximum_water * 30
-        points.append(f"{x:.2f},{y:.2f}")
-
-    final_y = 35 - total_water / maximum_water * 30 if total_water else 35
-    points.append(f"100,{final_y:.2f}")
-
-    return " ".join(points)
-
 
 def _habit_week(request, today):
+    """Menghitung progres kebiasaan selama 7 hari terakhir."""
     week_start = today - timedelta(days=6)
-    rows = _for_request_user(HabitEntry.objects.all(), request).filter(
-        recorded_on__range=(week_start, today)
-    ).values("recorded_on", "habit_type").annotate(total=Sum("amount"))
 
-    totals_by_day = {
-        week_start + timedelta(days=offset): {
-            habit_type: 0 for habit_type in HABIT_TARGETS
+    empty_week = [
+        {
+            "label": WEEKDAY_NAMES[(week_start + timedelta(days=i)).weekday()],
+            "value": 0,
+            "has_data": False,
         }
-        for offset in range(7)
-    }
-    recorded_types_by_day = {day: set() for day in totals_by_day}
+        for i in range(7)
+    ]
 
-    for row in rows:
-        day = row["recorded_on"]
-        habit_type = row["habit_type"]
-        totals_by_day[day][habit_type] = row["total"] or 0
-        recorded_types_by_day[day].add(habit_type)
+    if not request.user.is_authenticated:
+        return empty_week, None
+
+    habits = Habit.objects.filter(user=request.user, is_active=True)
+
+    logs = HabitLog.objects.filter(
+        habit__in=habits,
+        date__range=(week_start, today),
+    ).select_related("habit")
+
+    logs_by_day = {}
+
+    for log in logs:
+        logs_by_day.setdefault(log.date, []).append(log)
 
     habit_week = []
 
-    for day, totals in totals_by_day.items():
-        progresses = [
-            min(round(totals[habit_type] / HABIT_TARGETS[habit_type] * 100), 100)
-            for habit_type in recorded_types_by_day[day]
-        ]
-        has_data = bool(progresses)
+    for offset in range(7):
+        day = week_start + timedelta(days=offset)
 
-        habit_week.append(
-            {
-                "label": WEEKDAY_NAMES[day.weekday()],
-                "value": round(sum(progresses) / len(progresses)) if has_data else 0,
-                "has_data": has_data,
-            }
-        )
+        active_habits = habits.filter(
+            created_at__date__lte=day
+        ).count()
 
-    values = [day["value"] for day in habit_week if day["has_data"]]
-    week_average = round(sum(values) / len(values)) if values else None
+        day_logs = logs_by_day.get(day, [])
+
+        if active_habits == 0:
+            value = 0
+            has_data = False
+        else:
+            completed = sum(
+                1 for log in day_logs if log.is_completed
+            )
+            value = round(completed / active_habits * 100)
+            has_data = bool(day_logs)
+
+        habit_week.append({
+            "label": WEEKDAY_NAMES[day.weekday()],
+            "value": min(value, 100),
+            "has_data": has_data,
+        })
+
+    values = [
+        item["value"]
+        for item in habit_week
+        if item["has_data"]
+    ]
+
+    week_average = (
+        round(sum(values) / len(values))
+        if values else None
+    )
 
     return habit_week, week_average
 
 
-def _habit_streak(request, today):
-    recorded_days = set(
-        _for_request_user(HabitEntry.objects.all(), request).filter(
-            recorded_on__lte=today
-        ).values_list("recorded_on", flat=True).distinct()
-    )
-    streak = 0
-    day = today
+def _habit_streak(request):
+    """Mengambil streak dari model Habit Tracker."""
+    if not request.user.is_authenticated:
+        return 0
 
-    while day in recorded_days:
-        streak += 1
-        day -= timedelta(days=1)
+    streak = UserStreak.objects.filter(
+        user=request.user
+    ).first()
 
-    return streak
+    return streak.current_streak if streak else 0
 
 
 def _daily_summary(totals):
-    remaining_water = max(HABIT_TARGETS["water"] - totals["water"], 0)
-    remaining_steps = max(HABIT_TARGETS["steps"] - totals["steps"], 0)
+    remaining_water = max(
+        HABIT_TARGETS["water"] - totals["water"], 0
+    )
+    remaining_steps = max(
+        HABIT_TARGETS["steps"] - totals["steps"], 0
+    )
 
     if not any(totals.values()):
         return "Belum ada kebiasaan yang dicatat hari ini."
@@ -229,10 +304,14 @@ def _daily_summary(totals):
     remaining = []
 
     if remaining_water:
-        remaining.append(f"{_format_number(remaining_water)} ml air")
+        remaining.append(
+            f"{_format_number(remaining_water)} ml air"
+        )
 
     if remaining_steps:
-        remaining.append(f"{_format_number(remaining_steps)} langkah")
+        remaining.append(
+            f"{_format_number(remaining_steps)} langkah"
+        )
 
     if not remaining:
         return "Target hidrasi dan langkah hari ini sudah tercapai."
@@ -242,93 +321,284 @@ def _daily_summary(totals):
 
 def _dashboard_context(request):
     today = timezone.localdate()
-    today_entries = _for_request_user(HabitEntry.objects.all(), request).filter(
-        recorded_on=today
-    )
-    totals = _habit_totals(today_entries)
-    progress = {
-        habit_type: min(round(totals[habit_type] / target * 100), 100)
-        for habit_type, target in HABIT_TARGETS.items()
-    }
-    recorded_types = set(
-        today_entries.values_list("habit_type", flat=True).distinct()
-    )
-    score_values = [progress[habit_type] for habit_type in recorded_types]
-    score = round(sum(score_values) / len(score_values)) if score_values else None
-    habit_week, week_average = _habit_week(request, today)
-    month_impact_entries = _for_request_user(ImpactEntry.objects.all(), request).filter(
-        recorded_on__range=(today.replace(day=1), today)
-    )
-    month_impact = month_impact_entries.aggregate(total=Sum("packages_avoided"))["total"] or 0
+    hydration_amount = 0
+    hydration_target = 2500
+    sleep_minutes = 0
+    sleep_target = 450
+    activity_title = "Belum ada kebiasaan aktivitas"
+    activity_value = 0
+    activity_target = 0
+    activity_unit = ""
+    active_value = 0
+    active_target = 0
+    active_unit = ""
+    active_group_count = 0
+    active_has_log = False
+    walking_duration = 0
+    walking_steps = 0
+    habit_list = []
 
     if request.user.is_authenticated:
-        greeting_name = request.user.first_name or request.user.get_username()
+        walking_activities = WalkingActivity.objects.filter(
+            user=request.user, activity_date=today
+        )
+        for walking_activity in walking_activities:
+            walking_duration += walking_activity.duration_minutes
+            walking_steps += _walking_estimate(
+                walking_activity.duration_minutes,
+                walking_activity.speed_level,
+            )["steps"]
+
+        hydration_log = HydrationLog.objects.filter(
+            user=request.user, date=today
+        ).first()
+        if hydration_log:
+            hydration_amount = hydration_log.amount_ml
+            hydration_target = hydration_log.target_ml
+
+        sleep_log = SleepLog.objects.filter(user=request.user, date=today).first()
+        if sleep_log:
+            sleep_minutes = sleep_log.duration_minutes
+            sleep_target = sleep_log.target_minutes
+
+        active_habits = Habit.objects.filter(user=request.user, is_active=True)
+        today_logs = {
+            log.habit_id: log
+            for log in HabitLog.objects.filter(
+                habit__in=active_habits, date=today
+            ).select_related("habit")
+        }
+        activity_habit = active_habits.filter(category="exercise").first()
+        if activity_habit:
+            activity_log = today_logs.get(activity_habit.id)
+            activity_title = activity_habit.title
+            activity_value = activity_log.current_value if activity_log else 0
+            activity_target = activity_habit.target_value
+            activity_unit = activity_habit.unit
+
+        # Satu kartu hanya boleh menjumlahkan olahraga dengan satuan sama.
+        # Habit yang telah diarsipkan tetap masuk bila memiliki log hari ini.
+        exercise_logs = list(
+            HabitLog.objects.filter(
+                habit__user=request.user,
+                habit__category="exercise",
+                date=today,
+            ).select_related("habit")
+        )
+        exercise_habits = {
+            habit.id: habit
+            for habit in active_habits.filter(category="exercise")
+        }
+        exercise_habits.update({log.habit_id: log.habit for log in exercise_logs})
+        exercise_logs_by_habit = {log.habit_id: log for log in exercise_logs}
+        exercise_groups = {}
+
+        for habit in exercise_habits.values():
+            unit = habit.unit.strip()
+            unit_key = unit.casefold()
+            group = exercise_groups.setdefault(
+                unit_key,
+                {
+                    "unit": unit,
+                    "value": 0,
+                    "target": 0,
+                    "has_log": False,
+                    "count": 0,
+                },
+            )
+            log = exercise_logs_by_habit.get(habit.id)
+            group["value"] += log.current_value if log else 0
+            group["target"] += habit.target_value
+            group["has_log"] = group["has_log"] or log is not None
+            group["count"] += 1
+
+        if exercise_groups:
+            logged_groups = [
+                (key, group)
+                for key, group in exercise_groups.items()
+                if group["has_log"]
+            ]
+            candidate_groups = logged_groups or list(exercise_groups.items())
+            active_unit_key, active_group = next(
+                (
+                    (key, group)
+                    for key, group in candidate_groups
+                    if key == "menit"
+                ),
+                candidate_groups[0],
+            )
+            active_value = active_group["value"]
+            active_target = active_group["target"]
+            active_unit = active_group["unit"]
+            active_group_count = active_group["count"]
+            active_has_log = active_group["has_log"]
+
+        for habit in active_habits[:5]:
+            log = today_logs.get(habit.id)
+            value = log.current_value if log else 0
+            percent = min(round(value / habit.target_value * 100), 100)
+            habit_list.append({
+                "icon": "✓" if log and log.is_completed else "○",
+                "title": habit.title,
+                "detail": f"{_format_number(value)} dari {_format_number(habit.target_value)} {habit.unit}",
+                "complete": bool(log and log.is_completed),
+                "progress": percent,
+            })
+
+    hydration_progress = min(
+        round(hydration_amount / hydration_target * 100), 100
+    ) if hydration_target else 0
+    sleep_progress = min(round(sleep_minutes / sleep_target * 100), 100) if sleep_target else 0
+    activity_progress = min(
+        round(activity_value / activity_target * 100), 100
+    ) if activity_target else 0
+    active_progress = min(
+        round(active_value / active_target * 100), 100
+    ) if active_target else 0
+
+    recorded_progress = []
+    if request.user.is_authenticated:
+        if HydrationLog.objects.filter(user=request.user, date=today).exists():
+            recorded_progress.append(hydration_progress)
+        if SleepLog.objects.filter(user=request.user, date=today).exists():
+            recorded_progress.append(sleep_progress)
+        if activity_target:
+            recorded_progress.append(activity_progress)
+    score = round(sum(recorded_progress) / len(recorded_progress)) if recorded_progress else None
+
+    habit_week, week_average = _habit_week(request, today)
+
+    monthly_meal_average = {
+        "has_data": False,
+        "menu_count": 0,
+        "total_cost": 0,
+        "average_cost": None,
+        "total_cost_display": _format_rupiah_number(0),
+        "average_cost_display": None,
+    }
+
+    if request.user.is_authenticated:
+        monthly_meal_summary = Meal.objects.filter(
+            user=request.user,
+            date__range=(today.replace(day=1), today),
+        ).aggregate(
+            menu_count=Count("pk"),
+            total_cost=Sum("estimated_cost"),
+        )
+        monthly_menu_count = monthly_meal_summary["menu_count"] or 0
+        monthly_total_cost = monthly_meal_summary["total_cost"] or 0
+
+        if monthly_menu_count:
+            monthly_average_cost = round(monthly_total_cost / monthly_menu_count)
+            monthly_meal_average = {
+                "has_data": True,
+                "menu_count": monthly_menu_count,
+                "total_cost": monthly_total_cost,
+                "average_cost": monthly_average_cost,
+                "total_cost_display": _format_rupiah_number(monthly_total_cost),
+                "average_cost_display": _format_rupiah_number(monthly_average_cost),
+            }
+
+    if request.user.is_authenticated:
+        greeting_name = (
+            request.user.first_name
+            or request.user.get_username()
+        )
     else:
         greeting_name = "Pengguna"
 
-    water = totals["water"]
-    sleep = totals["sleep"]
-    steps = totals["steps"]
-    active = totals["active"]
+    meals = []
+    today_cost = 0
+    weekly_cost = 0
+    if request.user.is_authenticated:
+        today_meals = list(Meal.objects.filter(user=request.user, date=today))
+        today_cost = sum(meal.estimated_cost for meal in today_meals)
+        week_start = today - timedelta(days=today.weekday())
+        weekly_cost = (
+            Meal.objects.filter(user=request.user, date__range=(week_start, week_start + timedelta(days=6)))
+            .aggregate(total=Sum("estimated_cost"))["total"] or 0
+        )
+        for meal_type, label in Meal.MealType.choices[:3]:
+            matching_meals = [meal for meal in today_meals if meal.meal_type == meal_type]
+            meals.append({
+                "label": label,
+                "entries": matching_meals,
+                "cost": sum(meal.estimated_cost for meal in matching_meals),
+            })
+    else:
+        meals = [
+            {"label": label, "entries": [], "cost": 0}
+            for _, label in Meal.MealType.choices[:3]
+        ]
+
+    summary = "Belum ada catatan hari ini. Tambahkan melalui Habit Tracker."
+    if recorded_progress:
+        summary = "Ringkasan diambil dari catatan Habit Tracker hari ini."
 
     return {
-        "date": f"{WEEKDAY_NAMES[today.weekday()]}, {today.day} {MONTH_NAMES[today.month - 1]} {today.year}",
+        "date": (
+            f"{WEEKDAY_NAMES[today.weekday()]}, "
+            f"{today.day} "
+            f"{MONTH_NAMES[today.month - 1]} "
+            f"{today.year}"
+        ),
+        "today_iso": today.isoformat(),
         "greeting_name": greeting_name,
-        "daily_summary": _daily_summary(totals),
+        "daily_summary": summary,
         "score": score,
         "score_detail": (
-            f"{len(score_values)} dari 4 indikator dicatat hari ini"
-            if score_values
+            f"{len(recorded_progress)} indikator resmi tercatat hari ini"
+            if recorded_progress
             else "Catat kebiasaan untuk melihat skor"
         ),
-        "streak": _habit_streak(request, today),
-        "hydration_ml": water,
-        "hydration_progress": progress["water"],
-        "hydration_line": _hydration_chart(today_entries, water),
+        "streak": _habit_streak(request),
+        "hydration_ml": hydration_amount,
+        "hydration_target": hydration_target,
+        "hydration_progress": hydration_progress,
+        "hydration_line": f"0,35 100,{35 - hydration_progress * 0.3:.2f}",
         "hydration": {
-            "value": f"{water / 1000:.1f}".replace(".", ",") + " / 2 L",
-            "detail": f"{_format_number(water)} ml tercatat hari ini",
-            "progress": progress["water"],
+            "value": f"{hydration_amount / 1000:.1f}".replace(".", ",") + f" / {hydration_target / 1000:g} L",
+            "detail": f"{_format_number(hydration_amount)} ml dari target resmi {_format_number(hydration_target)} ml",
+            "progress": hydration_progress,
         },
         "sleep": {
-            "value": f"{sleep // 60}j {sleep % 60:02d}m",
-            "detail": "Durasi tidur yang kamu catat hari ini",
-            "progress": progress["sleep"],
+            "value": f"{sleep_minutes // 60}j {sleep_minutes % 60:02d}m",
+            "detail": f"Target tidur {sleep_target // 60}j {sleep_target % 60:02d}m",
+            "progress": sleep_progress,
         },
-        "steps": {
-            "value": _format_number(steps),
-            "detail": f"{progress['steps']}% dari target 8.000 langkah",
-            "progress": progress["steps"],
+        "walking": {
+            "steps": walking_steps,
+            "duration_minutes": walking_duration,
+            "value": f"± {_format_number(walking_steps)} langkah",
+            "detail": (
+                f"Berjalan selama {walking_duration} menit"
+                if walking_duration
+                else "Belum ada aktivitas berjalan kaki hari ini."
+            ),
         },
         "active": {
-            "value": f"{active} mnt",
-            "detail": "Menit gerak aktif tercatat hari ini",
-            "progress": progress["active"],
+            "value": f"{_format_number(active_value)} {active_unit}".strip() if active_unit else "0",
+            "detail": (
+                f"{active_progress}% dari target {_format_number(active_target)} {active_unit}"
+                if active_has_log
+                else (
+                    f"Belum ada log olahraga hari ini • target {_format_number(active_target)} {active_unit}"
+                    if active_target
+                    else "Belum ada kebiasaan olahraga yang dapat ditampilkan."
+                )
+            ),
+            "progress": active_progress,
+            "group_count": active_group_count,
         },
         "habit_week": habit_week,
         "week_average": week_average,
-        "habit_list": [
-            {
-                "icon": "♧",
-                "title": "Minum 2 liter",
-                "detail": f"{_format_number(water)} ml dari target 2.000 ml",
-                "complete": water >= HABIT_TARGETS["water"],
-            },
-            {
-                "icon": "☾",
-                "title": "Durasi tidur 8 jam",
-                "detail": f"{sleep // 60}j {sleep % 60:02d}m dari target 8 jam",
-                "complete": sleep >= HABIT_TARGETS["sleep"],
-            },
-            {
-                "icon": "♧",
-                "title": "Jalan 8.000 langkah",
-                "detail": f"{_format_number(steps)} langkah dari target 8.000",
-                "complete": steps >= HABIT_TARGETS["steps"],
-            },
-        ],
-        "month_impact": month_impact,
+        "habit_list": habit_list,
+        "monthly_meal_average": monthly_meal_average,
+        "meals": meals,
+        "today_meal_cost": today_cost,
+        "weekly_meal_cost": weekly_cost,
     }
+
 
 
 def _daily_impact_totals(entries):
@@ -406,10 +676,10 @@ def _period_change_label(current_total, previous_total):
     difference = current_total - previous_total
 
     if difference > 0:
-        return f"Naik {difference} item dari periode sebelumnya."
+        return f"Naik {difference} kontribusi dari periode sebelumnya."
 
     if difference < 0:
-        return f"Turun {abs(difference)} item dari periode sebelumnya."
+        return f"Turun {abs(difference)} kontribusi dari periode sebelumnya."
 
     return "Sama dengan periode sebelumnya."
 
@@ -418,50 +688,138 @@ def _impact_analytics_context(request, selected_period):
     today = timezone.localdate()
     period_start, period_end = _period_bounds(selected_period, today)
 
-    # Sumber data sekarang berasal dari Meal Planner.
-    meal_entries = Meal.objects.filter(
-        user=_meal_user(request),
-        date__range=(period_start, period_end),
-        packaging_used=0,
+    # Anggaran dan biaya makan untuk minggu berjalan (Senin–Minggu).
+    week_start = today - timedelta(days=today.weekday())
+    week_end = week_start + timedelta(days=6)
+
+    meal_user = _meal_user(request)
+
+    weekly_meals = Meal.objects.filter(
+        user=meal_user,
+        date__range=(week_start, week_end),
     )
 
-    # Asumsi prototipe: satu menu tanpa kemasan = estimasi
-    # satu kemasan sekali pakai yang dihindari.
-    packages = meal_entries.count()
+    weekly_cost = (
+        weekly_meals.aggregate(total=Sum("estimated_cost"))["total"] or 0
+    )
 
-    # Jumlah estimasi kemasan dihindari per tanggal.
+    weekly_budget = None
+
+    if request.user.is_authenticated:
+        weekly_budget = WeeklyBudget.objects.filter(
+            user=request.user,
+            week_start=week_start,
+        ).first()
+
+    budget_amount = weekly_budget.amount if weekly_budget else 0
+
+    budget_percent = (
+        round(weekly_cost / budget_amount * 100)
+        if budget_amount > 0
+        else 0
+    )
+
+    weekly_budget_data = {
+        "week_start": week_start,
+        "week_end": week_end,
+        "amount": budget_amount,
+        "spent": weekly_cost,
+        "remaining": max(budget_amount - weekly_cost, 0),
+        "percent": budget_percent,
+        "progress_width": min(budget_percent, 100),
+        "is_over_budget": budget_amount > 0 and weekly_cost > budget_amount,
+        "over_budget": max(weekly_cost - budget_amount, 0),
+        "has_budget": weekly_budget is not None,
+                "amount_display": _format_rupiah_number(budget_amount),
+        "spent_display": _format_rupiah_number(weekly_cost),
+        "remaining_display": _format_rupiah_number(
+            max(budget_amount - weekly_cost, 0)
+        ),
+        "over_budget_display": _format_rupiah_number(
+            max(weekly_cost - budget_amount, 0)
+        ),
+    }
+
+    # Satu ImpactEntry dan satu Meal tanpa kemasan masing-masing bernilai satu
+    # kontribusi. Nilai gabungan bukan jumlah fisik kemasan yang dihindari.
+    impact_entries = _for_request_user(ImpactEntry.objects.all(), request).filter(
+        recorded_on__range=(period_start, period_end)
+    )
+    impact_contributions = (
+        impact_entries.aggregate(total=Sum("packages_avoided"))["total"] or 0
+    )
+
+    # Meal Planner tidak menyimpan status konsumsi atau jumlah kemasan yang
+    # dihindari. Setiap Meal dengan nilai eksplisit 0 adalah satu kontribusi
+    # menu tanpa kemasan sekali pakai, bukan klaim satu kemasan fisik terhindari.
+    if request.user.is_authenticated:
+        period_meals = Meal.objects.filter(
+            user=request.user,
+            date__range=(period_start, period_end),
+        )
+        homemade_menu_count = period_meals.filter(is_homemade=True).count()
+        packaging_free_meals = period_meals.filter(
+            packaging_used=0,
+        )
+        packaging_free_summary = packaging_free_meals.aggregate(
+            menu_count=Count("pk"),
+            friendly_days=Count("date", distinct=True),
+        )
+        packaging_free_meal_count = packaging_free_summary["menu_count"] or 0
+        friendly_days = packaging_free_summary["friendly_days"] or 0
+        meal_daily_totals = dict(
+            packaging_free_meals.values("date")
+            .annotate(total=Count("pk"))
+            .values_list("date", "total")
+        )
+        meal_type_totals = dict(
+            packaging_free_meals.values("meal_type")
+            .annotate(total=Count("pk"))
+            .values_list("meal_type", "total")
+        )
+    else:
+        homemade_menu_count = 0
+        packaging_free_meal_count = 0
+        friendly_days = 0
+        meal_daily_totals = {}
+        meal_type_totals = {}
+
+    contributions = impact_contributions + packaging_free_meal_count
+
     daily_totals = dict(
-        meal_entries.values("date")
-        .annotate(total=Count("id"))
-        .values_list("date", "total")
+        impact_entries.values("recorded_on")
+        .annotate(total=Sum("packages_avoided"))
+        .values_list("recorded_on", "total")
     )
+    for meal_date, meal_total in meal_daily_totals.items():
+        daily_totals[meal_date] = daily_totals.get(meal_date, 0) + meal_total
 
-    # Kontribusi berdasarkan jenis makanan di Meal Planner.
-    source_totals = dict(
-        meal_entries.values("meal_type")
-        .annotate(total=Count("id"))
-        .values_list("meal_type", "total")
-    )
-
-    meal_types = list(Meal.MealType.choices)
+    # Sumber pengurangan mengikuti kategori resmi Meal Planner. ImpactEntry
+    # tetap masuk total gabungan, tetapi tidak menentukan kategori menu.
     source_reduction = [
         {
             "label": label,
-            "value": source_totals.get(meal_type, 0) or 0,
+            "value": meal_type_totals.get(meal_type, 0) or 0,
             "color": IMPACT_SOURCE_COLORS[index % len(IMPACT_SOURCE_COLORS)],
         }
-        for index, (meal_type, label) in enumerate(meal_types)
+        for index, (meal_type, label) in enumerate(Meal.MealType.choices)
     ]
 
-    largest_source = max(
-        (source["value"] for source in source_reduction),
-        default=0,
+    most_consistent_source = max(
+        source_reduction,
+        key=lambda source: source["value"],
+        default=None,
+    )
+    most_consistent_meal_type = (
+        most_consistent_source["label"]
+        if most_consistent_source and most_consistent_source["value"] > 0
+        else "Belum ada data"
     )
 
     for source in source_reduction:
         source["percent"] = (
-            round(source["value"] / largest_source * 100)
-            if largest_source
+            round(source["value"] / packaging_free_meal_count * 100)
+            if packaging_free_meal_count
             else 0
         )
 
@@ -481,8 +839,7 @@ def _impact_analytics_context(request, selected_period):
         trend.append(running_total)
         trend_labels.append(bucket["label"])
 
-    target = IMPACT_TARGETS[selected_period]
-    chart_max = max(max(trend, default=0), target, 1)
+    chart_max = max(max(trend, default=0), 1)
 
     chart_points = [
         {
@@ -499,43 +856,73 @@ def _impact_analytics_context(request, selected_period):
         period_end,
     )
 
-    previous_packages = Meal.objects.filter(
-        user=_meal_user(request),
-        date__range=(previous_start, previous_end),
-        packaging_used=0,
-    ).count()
+    previous_impact_contributions = _for_request_user(ImpactEntry.objects.all(), request).filter(
+        recorded_on__range=(previous_start, previous_end)
+    ).aggregate(total=Sum("packages_avoided"))["total"] or 0
 
-    all_time_packages = Meal.objects.filter(
-        user=_meal_user(request),
-        packaging_used=0,
-    ).count()
+    all_time_impact_contributions = _for_request_user(ImpactEntry.objects.all(), request).aggregate(
+        total=Sum("packages_avoided")
+    )["total"] or 0
+
+    if request.user.is_authenticated:
+        previous_meal_contributions = Meal.objects.filter(
+            user=request.user,
+            date__range=(previous_start, previous_end),
+            packaging_used=0,
+        ).count()
+        all_time_meal_contributions = Meal.objects.filter(
+            user=request.user,
+            date__lte=today,
+            packaging_used=0,
+        ).count()
+    else:
+        previous_meal_contributions = 0
+        all_time_meal_contributions = 0
+
+    previous_contributions = (
+        previous_impact_contributions + previous_meal_contributions
+    )
+    all_time_contributions = (
+        all_time_impact_contributions + all_time_meal_contributions
+    )
 
     return {
         "label": PERIOD_LABELS[selected_period],
         "period_start": period_start,
         "period_end": period_end,
+
         "summary": {
-            "packages": packages,
-            "emissions": "Belum tersedia",
+            "contributions": contributions,
+            "impact_entries": impact_contributions,
+            "homemade_menus": homemade_menu_count,
             "savings": "Belum tersedia",
             "plant_based": "Belum tersedia",
+        },
+
+        "weekly_budget": weekly_budget_data,
+        "meal_contribution": {
+            "count": packaging_free_meal_count,
+            "has_records": packaging_free_meal_count > 0,
+        },
+        "eco_eating": {
+            "packaging_free_menus": packaging_free_meal_count,
+            "friendly_days": friendly_days,
+            "most_consistent_meal_type": most_consistent_meal_type,
         },
         "source_reduction": source_reduction,
         "trend": trend,
         "trend_labels": trend_labels,
-        "target": target,
         "chart_points": chart_points,
-        "percent": min(round(packages / target * 100), 100),
-        "remaining": max(target - packages, 0),
         "change_label": _period_change_label(
-            packages,
-            previous_packages,
+            contributions,
+            previous_contributions,
         ),
-        "has_milestone": all_time_packages >= 100,
-        "all_time_packages": all_time_packages,
+        "has_milestone": all_time_contributions >= 100,
+        "all_time_contributions": all_time_contributions,
     }
 
 
+@login_required(login_url="user_profile:login")
 def dashboard(request):
     return render(
         request,
@@ -544,6 +931,7 @@ def dashboard(request):
     )
 
 
+@login_required(login_url="user_profile:login")
 def impact_analytics(request):
     selected_period = _selected_period(request.GET.get("period", "30d"))
     analytics = _impact_analytics_context(request, selected_period)
@@ -560,9 +948,71 @@ def impact_analytics(request):
     )
 
 
+@login_required(login_url="user_profile:login")
 @require_GET
 def dashboard_data_api(request):
     return JsonResponse({"ok": True, "dashboard": _dashboard_context(request)})
+
+
+@login_required(login_url="user_profile:login")
+def walking_activity_list(request):
+    """Halaman daftar aktivitas jalan kaki milik pengguna yang masuk."""
+    return render(request, "dashboard_analytics/walking_activities.html")
+
+
+@login_required(login_url="user_profile:login")
+@require_GET
+def walking_activities_api(request):
+    activities = WalkingActivity.objects.filter(user=request.user)
+    return JsonResponse(
+        {"ok": True, "activities": [_walking_activity_data(item) for item in activities]}
+    )
+
+
+@login_required(login_url="user_profile:login")
+@require_POST
+def create_walking_activity(request):
+    fields, error = _walking_payload_or_error(_json_payload(request))
+    if error:
+        return JsonResponse({"ok": False, "message": error}, status=400)
+
+    activity = WalkingActivity.objects.create(user=request.user, **fields)
+    return JsonResponse(
+        {
+            "ok": True,
+            "message": "Aktivitas berjalan kaki berhasil disimpan.",
+            "activity": _walking_activity_data(activity),
+        },
+        status=201,
+    )
+
+
+@login_required(login_url="user_profile:login")
+@require_POST
+def update_walking_activity(request, pk):
+    activity = get_object_or_404(WalkingActivity, pk=pk, user=request.user)
+    fields, error = _walking_payload_or_error(_json_payload(request))
+    if error:
+        return JsonResponse({"ok": False, "message": error}, status=400)
+
+    for field, value in fields.items():
+        setattr(activity, field, value)
+    activity.save(update_fields=[*fields.keys(), "updated_at"])
+    return JsonResponse(
+        {
+            "ok": True,
+            "message": "Aktivitas berjalan kaki berhasil diperbarui.",
+            "activity": _walking_activity_data(activity),
+        }
+    )
+
+
+@login_required(login_url="user_profile:login")
+@require_POST
+def delete_walking_activity(request, pk):
+    activity = get_object_or_404(WalkingActivity, pk=pk, user=request.user)
+    activity.delete()
+    return JsonResponse({"ok": True, "message": "Aktivitas berjalan kaki berhasil dihapus."})
 
 
 def _json_payload(request):
@@ -574,63 +1024,82 @@ def _json_payload(request):
     return payload if isinstance(payload, dict) else None
 
 
+@login_required(login_url="user_profile:login")
 @require_POST
-def add_habit_entry(request):
+def save_weekly_budget(request):
+    """Menyimpan atau memperbarui anggaran makan mingguan pengguna."""
+
     payload = _json_payload(request)
 
     if payload is None:
         return JsonResponse(
-            {"ok": False, "message": "Format data tidak valid."},
-            status=400,
-        )
-
-    habit_type = payload.get("habit_type")
-    amount = payload.get("amount")
-
-    if habit_type not in HABIT_LIMITS:
-        return JsonResponse(
-            {"ok": False, "message": "Jenis kebiasaan tidak dikenal."},
-            status=400,
-        )
-
-    try:
-        amount = int(amount)
-    except (TypeError, ValueError):
-        return JsonResponse(
-            {"ok": False, "message": "Masukkan angka yang valid."},
-            status=400,
-        )
-
-    if not 0 < amount <= HABIT_LIMITS[habit_type]:
-        return JsonResponse(
             {
                 "ok": False,
-                "message": "Nilai harus lebih besar dari 0 dan masih masuk akal.",
+                "message": "Format data tidak valid.",
             },
             status=400,
         )
 
-    entry = HabitEntry.objects.create(
-        **_entry_owner(request),
-        habit_type=habit_type,
-        amount=amount,
+    try:
+        amount = int(payload.get("amount"))
+    except (TypeError, ValueError):
+        return JsonResponse(
+            {
+                "ok": False,
+                "message": "Nominal anggaran harus berupa angka.",
+            },
+            status=400,
+        )
+
+    if not 1 <= amount <= 100_000_000:
+        return JsonResponse(
+            {
+                "ok": False,
+                "message": "Anggaran harus antara Rp1 dan Rp100.000.000.",
+            },
+            status=400,
+        )
+
+    today = timezone.localdate()
+    week_start = today - timedelta(days=today.weekday())
+
+    budget, created = WeeklyBudget.objects.update_or_create(
+        user=request.user,
+        week_start=week_start,
+        defaults={"amount": amount},
     )
 
     return JsonResponse(
         {
             "ok": True,
-            "message": "Catatan kebiasaan berhasil disimpan.",
-            "entry": {
-                "id": entry.pk,
-                "habit_type": entry.habit_type,
-                "amount": entry.amount,
-                "recorded_on": entry.recorded_on.isoformat(),
+            "message": (
+                "Anggaran mingguan berhasil disimpan."
+                if created
+                else "Anggaran mingguan berhasil diperbarui."
+            ),
+            "budget": {
+                "amount": budget.amount,
+                "amount_display": _format_number(budget.amount),
+                "week_start": budget.week_start.isoformat(),
             },
         },
-        status=201,
+        status=201 if created else 200,
+    )
+
+@login_required(login_url="user_profile:login")
+@require_POST
+def add_habit_entry(request):
+    """Endpoint lama dinonaktifkan agar Modul 4 tidak melewati validasi Modul 3."""
+    return JsonResponse(
+        {
+            "ok": False,
+            "message": "Catat kebiasaan melalui Habit Tracker agar validasi dan target resminya digunakan.",
+        },
+        status=410,
     )
 
 
+@login_required(login_url="user_profile:login")
 @require_POST
 def add_impact_entry(request):
     payload = _json_payload(request)
@@ -695,6 +1164,7 @@ def _safe_csv_value(value):
     return f"'{value}" if value.startswith(("=", "+", "-", "@")) else value
 
 
+@login_required(login_url="user_profile:login")
 @require_GET
 def download_report(request):
     selected_period = _selected_period(request.GET.get("period", "30d"))
@@ -715,18 +1185,81 @@ def download_report(request):
     )
     writer.writerow([])
     writer.writerow(["Metrik", "Nilai"])
-    writer.writerow(["Estimasi kemasan dihindari (item)", analytics["summary"]["packages"]])
-    writer.writerow(["Emisi dihemat", analytics["summary"]["emissions"]])
-    writer.writerow(["Uang dihemat", analytics["summary"]["savings"]])
-    writer.writerow(["Porsi plant-based", analytics["summary"]["plant_based"]])
+    writer.writerow([
+        "Periode anggaran mingguan",
+        (
+            f'{analytics["weekly_budget"]["week_start"].isoformat()} '
+            f's.d. {analytics["weekly_budget"]["week_end"].isoformat()}'
+        ),
+    ])
+    writer.writerow([
+        "Kontribusi pengurangan kemasan",
+        analytics["summary"]["contributions"],
+    ])
+    writer.writerow([
+        "Kontribusi dari aktivitas pengurangan kemasan (ImpactEntry)",
+        analytics["summary"]["impact_entries"],
+    ])
+    writer.writerow([
+        "Menu dengan 0 kemasan sekali pakai tercatat (Meal Planner)",
+        analytics["meal_contribution"]["count"],
+    ])
+    writer.writerow([
+        "Konsistensi memasak sendiri (menu)",
+        analytics["summary"]["homemade_menus"],
+    ])
+    writer.writerow([
+        "Anggaran mingguan",
+        (
+            analytics["weekly_budget"]["amount"]
+            if analytics["weekly_budget"]["has_budget"]
+            else "Belum diatur"
+        ),
+    ])
+    writer.writerow([
+        "Biaya makan minggu ini",
+        analytics["weekly_budget"]["spent"],
+    ])
+    writer.writerow([
+        "Sisa anggaran",
+        (
+            analytics["weekly_budget"]["remaining"]
+            if analytics["weekly_budget"]["has_budget"]
+            else "Belum diatur"
+        ),
+    ])
+    writer.writerow([
+        "Persentase anggaran terpakai",
+        (
+            f'{analytics["weekly_budget"]["percent"]}%'
+            if analytics["weekly_budget"]["has_budget"]
+            else "Belum diatur"
+        ),
+    ])
+    writer.writerow([
+        "Porsi plant-based",
+        analytics["summary"]["plant_based"],
+    ])
+    writer.writerow([
+        "Menu tanpa kemasan sekali pakai",
+        analytics["eco_eating"]["packaging_free_menus"],
+    ])
+    writer.writerow([
+        "Hari ramah lingkungan",
+        analytics["eco_eating"]["friendly_days"],
+    ])
+    writer.writerow([
+        "Kategori makan paling konsisten",
+        analytics["eco_eating"]["most_consistent_meal_type"],
+    ])
     writer.writerow([])
-    writer.writerow(["Sumber pengurangan","Estimasi kemasan dihindari (item)"])
+    writer.writerow(["Sumber kontribusi", "Kontribusi"])
 
     for source in analytics["source_reduction"]:
         writer.writerow([_safe_csv_value(source["label"]), source["value"]])
 
     writer.writerow([])
-    writer.writerow(["Tren kumulatif", "Estimasi kemasan dihindari"])
+    writer.writerow(["Tren kumulatif", "Kontribusi pengurangan kemasan"])
 
     for label, value in zip(analytics["trend_labels"], analytics["trend"]):
         writer.writerow([_safe_csv_value(label), value])
@@ -734,6 +1267,7 @@ def download_report(request):
     return response
 
 
+@login_required(login_url="user_profile:login")
 @require_GET
 def community_comments_api(request):
     """Ambil postingan komunitas beserta balasannya."""
@@ -751,6 +1285,9 @@ def community_comments_api(request):
             {
                 "id": reply.id,
                 "content": reply.content,
+                "can_delete": (
+                    request.user.is_authenticated and reply.user_id == request.user.id
+                ),
                 "author": (
                     reply.user.get_full_name()
                     or reply.user.get_username()
@@ -765,6 +1302,9 @@ def community_comments_api(request):
         results.append({
             "id": comment.id,
             "content": comment.content,
+            "can_delete": (
+                request.user.is_authenticated and comment.user_id == request.user.id
+            ),
             "author": (
                 comment.user.get_full_name()
                 or comment.user.get_username()
@@ -778,6 +1318,7 @@ def community_comments_api(request):
     return JsonResponse({"ok": True, "comments": results})
 
 
+@login_required(login_url="user_profile:login")
 @require_POST
 def add_community_comment(request):
     """Buat postingan komunitas atau balasan."""
@@ -822,7 +1363,7 @@ def add_community_comment(request):
             )
 
     comment = CommunityComment.objects.create(
-        user=request.user if request.user.is_authenticated else None,
+        user=request.user,
         content=content,
         parent=parent,
     )
@@ -847,4 +1388,23 @@ def add_community_comment(request):
             },
         },
         status=201,
+    )
+
+
+@login_required(login_url="user_profile:login")
+@require_POST
+def delete_community_comment(request, pk):
+    """Hapus komentar atau balasan milik pengguna yang sedang masuk."""
+    # Filter pemilik dilakukan di backend; ID saja tidak cukup untuk menghapus.
+    comment = get_object_or_404(CommunityComment, pk=pk, user=request.user)
+    parent_id = comment.parent_id
+    comment.delete()
+
+    return JsonResponse(
+        {
+            "ok": True,
+            "message": "Komentar berhasil dihapus.",
+            "deleted_id": pk,
+            "parent_id": parent_id,
+        }
     )

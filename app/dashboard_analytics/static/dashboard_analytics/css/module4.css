@@ -29,8 +29,7 @@
 .m4-chart-legend,
 .m4-chart-labels,
 .m4-streak,
-.m4-source-row > div:first-child,
-.m4-month-impact > p {
+.m4-source-row > div:first-child {
   display: flex;
 }
 
@@ -80,6 +79,8 @@
   display: grid;
   flex: 0 0 43px;
   font-size: 1.12rem;
+  font-family: system-ui, "Apple Color Emoji", "Segoe UI Emoji", sans-serif;
+  line-height: 1;
   height: 43px;
   place-items: center;
   width: 43px;
@@ -193,6 +194,8 @@
   border-radius: 11px;
   display: grid;
   font-size: 1rem;
+  font-family: system-ui, "Apple Color Emoji", "Segoe UI Emoji", sans-serif;
+  line-height: 1;
   height: 34px;
   place-items: center;
   position: absolute;
@@ -308,7 +311,6 @@
 }
 
 .m4-legend-september { background: var(--apple); }
-.m4-legend-target { background: var(--flax); }
 
 .m4-chart-canvas {
   height: 142px;
@@ -359,59 +361,27 @@
   margin-top: 6px;
 }
 
-.m4-target-panel { text-align: center; }
-.m4-target-panel .m4-panel-heading { text-align: left; }
-
-.m4-progress-ring {
-  --m4-progress: 80;
-  align-items: center;
-  background: conic-gradient(var(--apple) calc(var(--m4-progress) * 1%), #e8ead9 0);
-  border-radius: 50%;
-  display: grid;
-  height: 136px;
-  margin: 6px auto 16px;
-  place-items: center;
-  width: 136px;
-}
-
-.m4-progress-ring > div {
-  align-items: center;
-  background: var(--surface);
-  border-radius: 50%;
+.m4-motivation-panel {
+  align-items: flex-start;
+  background: linear-gradient(140deg, #f0f4df, #fff9dd);
   display: flex;
   flex-direction: column;
-  height: 112px;
   justify-content: center;
-  width: 112px;
 }
 
-.m4-progress-ring strong {
+.m4-motivation-panel h2 {
   font-family: var(--font-serif);
-  font-size: 2rem;
+  font-size: 1.55rem;
+  line-height: 1.2;
+  margin: 8px 0 10px;
 }
 
-.m4-progress-ring span {
+.m4-motivation-panel > p:last-child {
   color: var(--muted);
-  font-size: 0.55rem;
-  font-weight: 800;
-}
-
-.m4-target-copy {
-  color: var(--muted);
-  font-size: 0.72rem;
-  line-height: 1.55;
-  margin: 0 auto 14px;
-  max-width: 260px;
-}
-
-.m4-rank-badge {
-  background: var(--flax);
-  border-radius: 999px;
-  color: var(--moss);
-  display: inline-block;
-  font-size: 0.7rem;
-  font-weight: 800;
-  padding: 7px 12px;
+  font-size: 0.78rem;
+  line-height: 1.6;
+  margin: 0;
+  max-width: 330px;
 }
 
 .m4-source-list { display: grid; gap: 14px; }
@@ -445,6 +415,14 @@
 .m4-source-fill.gold { background: var(--gold); }
 .m4-source-fill.yellow { background: var(--flax); }
 
+.m4-source-note {
+  color: var(--muted);
+  font-size: 0.7rem;
+  line-height: 1.55;
+}
+
+.m4-source-note { margin: 16px 0 0; }
+
 .m4-equivalent-cards {
   display: grid;
   gap: 10px;
@@ -460,7 +438,24 @@
 .m4-equivalent-green { background: #eff3db; }
 .m4-equivalent-yellow { background: #fff0bf; }
 
-.m4-equivalent-card span { font-size: 1.2rem; }
+.m4-eco-eating-cards {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.m4-eco-eating-cards .m4-equivalent-card {
+  min-height: 112px;
+}
+
+.m4-eco-eating-cards .m4-equivalent-card strong {
+  font-size: clamp(1.05rem, 1.7vw, 1.4rem);
+  overflow-wrap: anywhere;
+}
+
+.m4-equivalent-card span {
+  font-family: system-ui, "Apple Color Emoji", "Segoe UI Emoji", sans-serif;
+  font-size: 1.2rem;
+  line-height: 1;
+}
 
 .m4-equivalent-card strong {
   display: block;
@@ -475,20 +470,6 @@
   line-height: 1.45;
   margin: 0;
 }
-
-.m4-community-note {
-  color: #7a561b;
-  display: flex;
-  font-size: 0.68rem;
-  gap: 9px;
-  line-height: 1.45;
-  margin: 16px 0 0;
-  padding: 14px;
-  background: #f7f5ec;
-  border-radius: 12px;
-}
-
-.m4-community-note span { color: var(--bistre); }
 
 .m4-milestone {
   align-items: center;
@@ -509,6 +490,8 @@
   display: grid;
   flex: 0 0 49px;
   font-size: 1.45rem;
+  font-family: system-ui, "Apple Color Emoji", "Segoe UI Emoji", sans-serif;
+  line-height: 1;
   height: 49px;
   place-items: center;
   width: 49px;
@@ -732,41 +715,58 @@
 .m4-meal-cards strong { display: block; font-size: 0.76rem; }
 .m4-meal-cards small { color: var(--muted); display: block; font-size: 0.56rem; margin-top: 7px; }
 
-.m4-month-impact > div {
+.m4-average-meal-cost-value {
   align-items: center;
   display: grid;
   gap: 10px;
   grid-template-columns: 48px minmax(0, 1fr);
 }
 
-.m4-month-impact > div span {
+.m4-average-meal-cost-value span {
   align-items: center;
   background: #e7edc9;
   border-radius: 15px;
   color: var(--moss);
   display: grid;
   font-size: 1.2rem;
-  grid-row: span 2;
   height: 48px;
   place-items: center;
   width: 48px;
 }
 
-.m4-month-impact > div strong { font-family: var(--font-serif); font-size: 1.3rem; }
-.m4-month-impact > div small { color: var(--muted); font-size: 0.6rem; }
+.m4-average-meal-cost-value strong { font-family: var(--font-serif); font-size: 1.3rem; }
 
-.m4-month-impact > p { flex-wrap: wrap; gap: 7px; }
-
-.m4-month-impact > p b {
-  background: #e6edc7;
-  border-radius: 999px;
-  color: var(--moss);
-  font-size: 0.58rem;
-  padding: 6px 8px;
+.m4-average-meal-cost-details {
+  display: grid;
+  gap: 8px;
+  margin: 16px 0 0;
 }
 
-.m4-month-impact > p b + b { background: var(--flax); }
-.m4-month-impact a { color: var(--moss); font-size: 0.68rem; font-weight: 800; text-decoration: none; }
+.m4-average-meal-cost-details div {
+  align-items: baseline;
+  border-top: 1px solid #e7e5d4;
+  display: flex;
+  gap: 10px;
+  justify-content: space-between;
+  padding-top: 8px;
+}
+
+.m4-average-meal-cost-details dt,
+.m4-average-meal-cost-details dd,
+.m4-average-meal-cost-empty-copy {
+  color: var(--muted);
+  font-size: 0.7rem;
+}
+
+.m4-average-meal-cost-details dd {
+  color: var(--bistre);
+  font-weight: 800;
+  margin: 0;
+  text-align: right;
+}
+
+.m4-average-meal-cost-empty strong { font-size: 1.05rem; }
+.m4-average-meal-cost-empty-copy { line-height: 1.5; margin: 16px 0 0; }
 
 @media (max-width: 1100px) {
   .m4-impact-layout,
@@ -912,7 +912,7 @@
   transition: height 0.2s ease;
 }
 
-/* Meal cards and monthly impact panel */
+/* Meal cards and monthly average-cost card */
 .m4-dashboard-page .m4-meal-cards { gap: 12px; }
 .m4-dashboard-page .m4-meal-cards > div {
   min-width: 0;
@@ -933,33 +933,32 @@
 }
 
 .m4-dashboard-page .m4-dashboard-bottom > .m4-meal-panel,
-.m4-dashboard-page .m4-dashboard-bottom > .m4-month-impact {
+.m4-dashboard-page .m4-dashboard-bottom > .m4-average-meal-cost {
   min-width: 0;
   height: 100%;
   box-sizing: border-box;
 }
 
-.m4-dashboard-page .m4-month-impact { padding: 20px; }
-.m4-dashboard-page .m4-month-impact .m4-panel-heading {
+.m4-dashboard-page .m4-average-meal-cost { padding: 20px; }
+.m4-dashboard-page .m4-average-meal-cost .m4-panel-heading {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
   gap: 8px;
   margin-bottom: 16px;
 }
-.m4-dashboard-page .m4-month-impact .m4-panel-heading > div { flex: 1; min-width: 0; }
-.m4-dashboard-page .m4-month-impact .m4-panel-heading h2 {
+.m4-dashboard-page .m4-average-meal-cost .m4-panel-heading > div { flex: 1; min-width: 0; }
+.m4-dashboard-page .m4-average-meal-cost .m4-panel-heading h2 {
   font-size: 1.2rem;
   line-height: 1.35;
   margin: 0 0 4px;
 }
-.m4-dashboard-page .m4-month-impact .m4-panel-heading p {
+.m4-dashboard-page .m4-average-meal-cost .m4-panel-heading p {
   font-size: 0.82rem;
   line-height: 1.45;
   margin: 0;
 }
-.m4-dashboard-page .m4-month-impact .m4-more-button { flex-shrink: 0; }
-.m4-dashboard-page .m4-month-impact > div:not(.m4-panel-heading) {
+.m4-dashboard-page .m4-average-meal-cost-value {
   display: grid;
   grid-template-columns: 54px minmax(0, 1fr);
   grid-template-rows: auto auto;
@@ -967,7 +966,7 @@
   gap: 3px 12px;
   margin-bottom: 14px;
 }
-.m4-dashboard-page .m4-month-impact > div:not(.m4-panel-heading) > span {
+.m4-dashboard-page .m4-average-meal-cost-value > span {
   grid-column: 1;
   grid-row: 1 / 3;
   width: 54px;
@@ -975,78 +974,11 @@
   border-radius: 18px;
   font-size: 1.3rem;
 }
-.m4-dashboard-page .m4-month-impact > div:not(.m4-panel-heading) > strong {
+.m4-dashboard-page .m4-average-meal-cost-value > strong {
   min-width: 0;
   font-size: clamp(1.15rem, 1.35vw, 1.55rem);
   line-height: 1.2;
   overflow-wrap: anywhere;
-}
-.m4-dashboard-page .m4-month-impact > div:not(.m4-panel-heading) > small {
-  font-size: 0.72rem;
-  line-height: 1.35;
-}
-.m4-dashboard-page .m4-month-impact > p {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 7px;
-  margin: 0 0 12px;
-}
-.m4-dashboard-page .m4-month-impact > p b { font-size: 0.72rem; padding: 7px 10px; }
-.m4-dashboard-page .m4-month-impact > a { display: inline-block; font-size: 0.88rem; }
-
-/* Figma recommendation cards */
-.m4-dashboard-page .m4-recommendations {
-  display: grid;
-  grid-template-columns: 180px repeat(2, minmax(0, 1fr));
-  gap: 16px;
-  align-items: start;
-  margin-top: 20px;
-}
-.m4-dashboard-page .m4-recommendations > h2 {
-  margin: 0;
-  font-family: var(--font-serif);
-  font-size: 1.35rem;
-  line-height: 1.2;
-}
-.m4-dashboard-page .m4-recipe-card {
-  min-width: 0;
-  overflow: hidden;
-  border: 1px solid var(--border);
-  border-radius: 16px;
-  background: var(--surface);
-}
-.m4-dashboard-page .m4-recipe-image {
-  height: 148px;
-  background-color: #e7edc9;
-  background-size: cover;
-  background-position: center;
-}
-.m4-dashboard-page .m4-recipe-content {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 9px;
-  padding: 15px;
-}
-.m4-dashboard-page .m4-recipe-tag {
-  padding: 4px 8px;
-  border-radius: 999px;
-  background: var(--flax);
-  color: var(--moss);
-  font-size: 10px;
-  font-weight: 700;
-}
-.m4-dashboard-page .m4-recipe-content h3 {
-  margin: 0;
-  font-family: var(--font-serif);
-  font-size: 1.1rem;
-  line-height: 1.25;
-}
-.m4-dashboard-page .m4-recipe-content p {
-  margin: 0;
-  color: var(--muted);
-  font-size: 0.7rem;
-  line-height: 1.5;
 }
 
 /* Impact Analytics spacing and responsive layout */
@@ -1070,9 +1002,6 @@
 .m4-impact-page .m4-chart-canvas { min-width: 0; overflow: hidden; }
 .m4-impact-page .m4-chart-svg { overflow: visible; }
 .m4-impact-page .m4-chart-labels { justify-content: space-between; gap: 6px; flex-wrap: nowrap; }
-.m4-impact-page .m4-target-panel { display: flex; flex-direction: column; }
-.m4-impact-page .m4-target-copy { line-height: 1.65; }
-.m4-impact-page .m4-rank-badge { align-self: center; margin-top: auto; }
 .m4-impact-page .m4-source-list { gap: 19px; }
 .m4-impact-page .m4-source-row > div:first-child { align-items: baseline; gap: 10px; }
 .m4-impact-page .m4-source-row > div:first-child span { line-height: 1.5; }
@@ -1080,7 +1009,6 @@
 .m4-impact-page .m4-equivalent-cards { gap: 12px; }
 .m4-impact-page .m4-equivalent-card { min-width: 0; padding: 17px; }
 .m4-impact-page .m4-equivalent-card strong { overflow-wrap: anywhere; }
-.m4-impact-page .m4-community-note { align-items: flex-start; line-height: 1.6; }
 .m4-impact-page .m4-milestone { gap: 18px; margin-top: 8px; padding: 22px 24px; }
 .m4-impact-page .m4-milestone > div { flex: 1; min-width: 0; }
 .m4-impact-page .m4-milestone h2 { line-height: 1.35; }
@@ -1097,8 +1025,6 @@
   .m4-dashboard-page .m4-hero h1 { font-size: clamp(1.8rem, 7vw, 2.4rem); }
   .m4-dashboard-page .m4-daily-banner { padding: 22px; }
   .m4-dashboard-page .m4-panel { padding: 17px; }
-  .m4-dashboard-page .m4-recommendations { grid-template-columns: minmax(0, 1fr); }
-  .m4-dashboard-page .m4-recipe-image { height: 180px; }
   .m4-impact-page .m4-panel { padding: 18px; }
   .m4-impact-page .m4-stat-card { min-height: 138px; padding: 17px; }
   .m4-impact-page .m4-chart-labels { font-size: 0.58rem; }
@@ -1106,7 +1032,7 @@
 }
 
 @media (max-width: 500px) {
-  .m4-dashboard-page .m4-month-impact { padding: 17px; }
+  .m4-dashboard-page .m4-average-meal-cost { padding: 17px; }
   .m4-impact-page .m4-toolbar { align-items: stretch; }
   .m4-impact-page .m4-period-tabs { overflow-x: auto; }
   .m4-impact-page .m4-period-tab { white-space: nowrap; }
@@ -1336,6 +1262,25 @@
   font-size: 12px;
 }
 
+.m4-community-delete-button {
+  margin-left: auto;
+  padding: 4px 7px;
+  border: 0;
+  border-radius: 7px;
+  background: transparent;
+  color: #9a5144;
+  font: inherit;
+  font-size: 0.72rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.m4-community-delete-button:hover,
+.m4-community-delete-button:focus-visible {
+  background: #faeae4;
+  color: #78392e;
+}
+
 .m4-community-post > p {
   margin: 0 0 18px;
   line-height: 1.8;
@@ -1543,6 +1488,10 @@
   font-size: 14px;
 }
 
+.m4-community-reply-heading small {
+  margin-left: auto;
+}
+
 /* Batasi tinggi daftar postingan, bukan jumlah datanya */
 #m4-community-list {
   max-height: 650px;
@@ -1654,8 +1603,475 @@
 }
 
 
+/* FIX: Module 4 toast notification */
+#m4-toast.m4-toast {
+    position: fixed !important;
+    z-index: 99999 !important;
+    right: 24px !important;
+    bottom: 24px !important;
+
+    display: block;
+    width: fit-content;
+    max-width: min(420px, calc(100vw - 32px));
+
+    padding: 15px 20px !important;
+    border: 1px solid #59652d !important;
+    border-radius: 13px !important;
+
+    background: #3f4a17 !important;
+    background-color: #3f4a17 !important;
+    background-image: none !important;
+
+    color: #ffffff !important;
+    opacity: 1 !important;
+    filter: none !important;
+
+    font-size: 14px !important;
+    font-weight: 600 !important;
+    line-height: 1.5 !important;
+
+    box-shadow: 0 8px 24px rgba(29, 31, 18, 0.25) !important;
+    pointer-events: none;
+}
+
+#m4-toast[hidden] {
+    display: none !important;
+}
+
+@media (max-width: 520px) {
+    #m4-toast.m4-toast {
+        right: 16px !important;
+        bottom: 16px !important;
+    }
+}
+
+
+/* Form action buttons */
+.m4-modal .m4-form-actions {
+    display: flex;
+    flex-direction: row;
+    gap: 12px;
+    margin-top: 10px;
+}
+
+.m4-modal .m4-form-actions button {
+    flex: 1;
+    width: auto;
+    min-height: 48px;
+    margin-top: 0;
+    border-radius: 12px;
+    font-size: 0.95rem;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+/* Cancel button */
+.m4-modal .m4-cancel-button {
+    background: #ffffff;
+    color: #45502a;
+    border: 1px solid #45502a;
+}
+
+/* Save button */
+.m4-modal .m4-form-actions .m4-primary-button {
+    background: #45502a !important;
+    background-color: #45502a !important;
+    color: #ffffff !important;
+    border: 1px solid #45502a;
+}
+
+.m4-modal .m4-form-actions button:hover {
+    filter: brightness(0.95);
+}
+
+/* Aktivitas berjalan kaki — Modul 4 */
+.m4-walking-card-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 11px;
+}
+
+.m4-text-button {
+  color: var(--apple);
+  font-size: .72rem;
+  font-weight: 800;
+  text-decoration: none;
+}
+
+button.m4-text-button {
+  border: 0;
+  padding: 0;
+  background: transparent;
+  cursor: pointer;
+}
+
+.m4-speed-options {
+  display: grid;
+  gap: 8px;
+  margin: 3px 0;
+  padding: 10px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+}
+
+.m4-speed-options legend {
+  padding: 0 4px;
+  color: var(--bistre);
+  font-size: .86rem;
+  font-weight: 700;
+}
+
+.m4-speed-options label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+}
+
+.m4-speed-options input { width: auto; min-height: auto; }
+.m4-speed-options small { color: var(--muted); }
+
+.m4-walking-preview {
+  display: grid;
+  gap: 4px;
+  padding: 12px;
+  border-radius: 10px;
+  background: #f2f5df;
+  color: var(--moss);
+}
+
+.m4-walking-preview strong { font-size: .82rem; }
+.m4-walking-preview span { font-size: .92rem; font-weight: 700; }
+
+.m4-walking-list-panel { max-width: 860px; }
+.m4-walking-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 16px 0;
+  border-bottom: 1px solid var(--border);
+}
+.m4-walking-row:last-child { border-bottom: 0; }
+.m4-walking-row > div:first-child { display: grid; gap: 4px; }
+.m4-walking-row span, .m4-walking-row small { color: var(--muted); }
+.m4-walking-row-actions { display: flex; gap: 8px; }
+.m4-walking-row-actions button {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 7px 10px;
+  background: white;
+  color: var(--moss);
+  font-weight: 700;
+  cursor: pointer;
+}
+.m4-walking-row-actions button:last-child { color: #9f3030; }
+
+@media (max-width: 520px) {
+  .m4-walking-row { align-items: flex-start; flex-direction: column; }
+}
+
+@media (max-width: 520px) {
+    .m4-modal .m4-form-actions {
+        gap: 8px;
+    }
+}
+
+/* ===== Impact Analytics: Anggaran Mingguan ===== */
+
+.m4-impact-page .m4-budget-card {
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+}
+
+.m4-impact-page .m4-budget-card > p {
+    margin-bottom: 8px;
+}
+
+.m4-impact-page .m4-budget-card h2 {
+    font-size: clamp(1.25rem, 1.8vw, 1.75rem);
+    margin: 4px 0 5px;
+}
+
+.m4-impact-page .m4-budget-card > small {
+    margin-top: 0;
+    line-height: 1.5;
+}
+
+.m4-budget-details {
+    margin-top: 13px;
+    width: 100%;
+}
+
+.m4-budget-track {
+    width: 100%;
+    height: 9px;
+    overflow: hidden;
+    background: #e8ead9;
+    border-radius: 999px;
+}
+
+.m4-budget-fill {
+    height: 100%;
+    background: var(--apple);
+    border-radius: inherit;
+    transition: width 0.3s ease;
+}
+
+.m4-budget-info {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    margin-top: 8px;
+    font-size: 0.65rem;
+}
+
+.m4-budget-info span {
+    color: var(--muted);
+}
+
+.m4-budget-info strong {
+    color: var(--moss);
+    white-space: nowrap;
+}
+
+.m4-budget-details > small {
+    display: block;
+    margin-top: 7px;
+    color: var(--muted);
+    font-size: 0.65rem;
+    line-height: 1.5;
+}
+
+.m4-budget-details > .m4-budget-warning {
+    color: #a34332;
+    font-weight: 700;
+}
+
+.m4-impact-page .m4-stat-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 14px;
+}
+
+.m4-impact-page .m4-budget-highlight {
+    grid-column: span 2;
+    min-height: 190px;
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+}
+
+.m4-impact-page .m4-budget-highlight .m4-budget-details {
+    width: 100%;
+    margin-top: 16px;
+}
+
+.m4-impact-page .m4-budget-highlight .m4-budget-actions {
+    display: flex;
+    justify-content: flex-end;
+    width: 100%;
+    margin-top: auto;
+    padding-top: 18px;
+}
+
+@media (max-width: 760px) {
+    .m4-impact-page .m4-stat-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .m4-impact-page .m4-budget-highlight {
+        grid-column: 1 / -1;
+    }
+}
+
+/* ===== Layout 3 Card Impact Analytics ===== */
+
+.m4-impact-page .m4-stat-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 14px;
+}
+
+.m4-impact-page .m4-budget-highlight {
+    grid-column: span 2;
+    min-height: 190px;
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+}
+
+.m4-impact-page .m4-budget-highlight > p {
+    margin-bottom: 12px;
+}
+
+.m4-impact-page .m4-budget-highlight h2 {
+    font-size: 2rem;
+}
+
+.m4-impact-page .m4-budget-highlight .m4-budget-details {
+    width: 100%;
+    margin-top: 16px;
+}
+
+.m4-impact-page .m4-budget-highlight .m4-budget-actions {
+    display: flex;
+    justify-content: flex-end;
+    width: 100%;
+    margin-top: auto;
+    padding-top: 18px;
+}
+
+.m4-impact-page .m4-budget-button {
+    cursor: pointer;
+}
+
+@media (max-width: 760px) {
+    .m4-impact-page .m4-stat-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .m4-impact-page .m4-budget-highlight {
+        grid-column: 1 / -1;
+    }
+}
+
+
+/* ===== Walking Activity Card ===== */
+
+.m4-walking-actions {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 18px;
+}
+
+.m4-walking-actions button,
+.m4-walking-actions a {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 42px;
+    padding: 10px 18px;
+    border-radius: 999px;
+    font-family: inherit;
+    font-size: 0.88rem;
+    font-weight: 600;
+    text-decoration: none;
+    cursor: pointer;
+    transition: background 0.2s ease,
+                color 0.2s ease,
+                transform 0.2s ease;
+}
+
+/* Tombol Catat Jalan Kaki */
+.m4-walking-actions button {
+    border: 1px solid var(--moss, #354416);
+    background: var(--moss, #354416);
+    color: #fff;
+}
+
+.m4-walking-actions button:hover {
+    background: #52652a;
+    transform: translateY(-1px);
+}
+
+/* Tombol Lihat Catatan */
+.m4-walking-actions a {
+    border: 1px solid #ded9c7;
+    background: transparent;
+    color: var(--moss, #354416);
+}
+
+.m4-walking-actions a:hover {
+    background: #f1f2e5;
+    border-color: var(--moss, #354416);
+}
+
+/* Fokus keyboard */
+.m4-walking-actions button:focus-visible,
+.m4-walking-actions a:focus-visible {
+    outline: 3px solid #e8d77c;
+    outline-offset: 3px;
+}
+
+/* Mobile */
+@media (max-width: 500px) {
+    .m4-walking-actions {
+        gap: 8px;
+    }
+
+    .m4-walking-actions button,
+    .m4-walking-actions a {
+        min-height: 40px;
+        padding: 9px 14px;
+        font-size: 0.82rem;
+    }
+}
 
 
 
+/* Walking activity buttons */
+.m4-dashboard-page .m4-walking-card-actions {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    align-items: center;
+    gap: 10px;
+    margin-top: 18px;
+    width: 100%;
+}
 
+.m4-dashboard-page .m4-walking-card-actions .m4-text-button {
+    display: inline-flex;
+    flex: 0 1 auto;
+    align-items: center;
+    justify-content: center;
+    width: auto;
+    min-width: 0;
+    min-height: 38px;
+    padding: 8px 13px;
+    border-radius: 999px;
+    font-family: inherit;
+    font-size: 0.72rem;
+    font-weight: 700;
+    line-height: 1.2;
+    text-align: center;
+    text-decoration: none;
+    white-space: nowrap;
+    cursor: pointer;
+    box-sizing: border-box;
+}
 
+/* Catat jalan kaki */
+.m4-dashboard-page .m4-walking-card-actions button.m4-text-button {
+    background: var(--moss);
+    border: 1px solid var(--moss);
+    color: white;
+}
+
+/* Lihat catatan */
+.m4-dashboard-page .m4-walking-card-actions a.m4-text-button {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--moss);
+}
+
+.m4-dashboard-page .m4-walking-card-actions .m4-text-button:hover {
+    transform: translateY(-1px);
+}
+
+@media (max-width: 500px) {
+    .m4-dashboard-page .m4-walking-card-actions {
+        gap: 7px;
+    }
+
+    .m4-dashboard-page .m4-walking-card-actions .m4-text-button {
+        padding: 8px 10px;
+        font-size: 0.68rem;
+    }
+}

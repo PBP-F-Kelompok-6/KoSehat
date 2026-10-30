@@ -37,3 +37,25 @@ Mahasiswa Universitas Indonesia yang tinggal di kos atau asrama dan ingin memben
 ## Figma
 
 https://www.figma.com/design/hMQFcCGOQjJC8QqEYC8W7N/Untitled?node-id=0-1&p=f
+
+
+## Module 4 — Dashboard & Impact Analytics
+
+Module 4 uses Django MVT: `dashboard_analytics/views.py` prepares context, templates render the pages, and `dashboard_analytics/data.py` currently provides **sample/demo analytics**. The sample totals are not yet live data from Meal Planner or Habit Tracker.
+
+### Local setup
+1. Activate the project's virtual environment.
+2. Install dependencies with `pip install -r requirements.txt`.
+3. Apply database migrations with `python manage.py migrate`.
+4. Start Django with `python manage.py runserver`.
+
+### Module 4 endpoints
+- `/dashboard/` — Dashboard page.
+- `/impact-analytics/` — Impact Analytics page; `?period=7d`, `30d`, `3m`, or `year` changes the displayed sample range.
+- `/api/dashboard/` — JSON response for dashboard data.
+- `/api/habits/` — POST JSON to store a habit entry in the temporary `HabitEntry` model.
+- `/impact-analytics/report.csv?period=30d` — download a CSV report.
+
+The temporary `HabitEntry` model is a bridge so the “Catat kebiasaan” form works before the Habit Tracker module is integrated. When the team's Habit Tracker model is ready, update `_dashboard_context()` in `dashboard_analytics/views.py` to query that model instead of `HabitEntry`; keep the template context keys stable to minimize frontend changes.
+
+The Meal Planner cards, impact totals, and trend series are still sample data until Module 2's persisted model is available. Do not present these values as real personal analytics before integration.

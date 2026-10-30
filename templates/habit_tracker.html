@@ -1,0 +1,273 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Tracker Kesehatan - KoSehat{% endblock title %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/habit_tracker.css' %}" />
+{% endblock extra_css %}
+
+{% block content %}
+<div class="habit-tracker-container">
+  <!-- Header -->
+  <header class="tracker-header">
+    <div class="tracker-title-group">
+      <p class="menu-label">TRACKER KESEHATAN</p>
+      <h2 class="font-serif-heading">Kenali pola yang bikin badanmu terasa lebih enak.</h2>
+      <p class="tracker-subtitle">Catat kebiasaan sederhana dan lihat hubungan antara tidur, hidrasi, serta energi harian.</p>
+    </div>
+  </header>
+
+  <!-- Weekly Calendar Section -->
+  <div class="weekly-calendar-section">
+    <h3 class="calendar-month-header" id="calendar-month-label">October</h3>
+    <div class="day-selector-strip" id="day-selector-strip"></div>
+  </div>
+
+  <hr class="calendar-divider" />
+
+  <!-- KPI Cards -->
+  <div class="kpi-grid">
+    <div class="kpi-card">
+      <div class="kpi-card-topline">
+        <div class="kpi-label">Streak aktif</div>
+        <span class="kpi-icon kpi-icon-streak" aria-hidden="true">✦</span>
+      </div>
+      <div class="kpi-val" id="kpi-streak">0 hari</div>
+      <div class="kpi-sub" id="kpi-streak-sub">Rekor terbaik: 0 hari</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-card-topline">
+        <div class="kpi-label">Kebiasaan selesai</div>
+        <span class="kpi-icon kpi-icon-habit" aria-hidden="true">✓</span>
+      </div>
+      <div class="kpi-val" id="kpi-completed">0 / 0</div>
+      <div class="kpi-mini-progress"><span id="kpi-completed-progress"></span></div>
+      <div class="kpi-sub" id="kpi-remaining">0 target belum selesai</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-card-focus-header">
+        <div>
+          <div class="kpi-card-topline">
+            <div class="kpi-label">Waktu fokus</div>
+            <span class="kpi-icon kpi-icon-focus" aria-hidden="true">◷</span>
+          </div>
+          <div class="kpi-val" id="kpi-focus">0m</div>
+          <div class="kpi-sub-target" id="kpi-focus-target-text">Target: 0m</div>
+          <div class="kpi-mini-progress"><span id="kpi-focus-progress"></span></div>
+          <div id="kpi-focus-badge-container"></div>
+        </div>
+        <button class="btn-dots-menu" id="btn-open-energy-modal" title="Pengaturan waktu fokus">•••</button>
+      </div>
+      <button class="btn-add-focus-trigger" id="btn-open-add-focus-modal">+ Tambah</button>
+    </div>
+  </div>
+
+  <!-- Main Body Grid -->
+  <div class="tracker-body-grid">
+    <div class="habit-section-card">
+      <div class="habit-section-header">
+        <h3>Kebiasaan hari ini</h3>
+        <button class="btn-dots-menu" type="button" id="btn-open-modal" title="Tambah kebiasaan" aria-label="Tambah kebiasaan">•••</button>
+      </div>
+      <div class="habit-progress-summary">
+        <strong id="habit-progress-percent">0%</strong>
+        <span>kebiasaan selesai hari ini</span>
+      </div>
+      <div class="progress-bar-bg habit-progress-track">
+        <div class="progress-bar-fill" id="habit-progress-bar" style="width: 0%;"></div>
+      </div>
+      <div id="habit-list-container"></div>
+    </div>
+
+    <div class="side-widgets-column">
+      <!-- Widget Kualitas Tidur -->
+      <div class="side-widget-card sleep-widget-card">
+        <div class="sleep-card-header">
+          <div>
+            <h4>Kualitas tidur</h4>
+            <p class="widget-subtitle">7 malam terakhir</p>
+          </div>
+          <button class="btn-dots-menu" id="btn-open-sleep-modal" title="Pengaturan & Catat Tidur">•••</button>
+        </div>
+
+        <div class="sleep-main-val" id="sleep-last-night-val">0j 0m</div>
+
+        <!-- Grafik Batang 7 Malam Terakhir -->
+        <div class="sleep-chart-container" id="sleep-chart-container"></div>
+
+        <!-- Legend Target -->
+        <div class="sleep-legend">
+          <span class="target-dot"></span>
+          <span id="sleep-legend-target-text">Target 7,5 jam</span>
+        </div>
+      </div>
+
+      <div class="side-widget-card">
+        <h4>Hidrasi Harian</h4>
+        <p class="kpi-val" id="hydration-amount" style="margin-top: 8px;">0 ml</p>
+        <div class="hydration-bottle" id="hydration-bottle" role="img" aria-label="Progress hidrasi">
+          <div class="hydration-bottle-cap"></div>
+          <div class="hydration-bottle-neck"></div>
+          <div class="hydration-bottle-body">
+            <div class="hydration-bottle-water" id="hydration-bottle-water"></div>
+            <div class="hydration-bottle-label">KoSehat</div>
+          </div>
+        </div>
+        <p class="kpi-sub" id="hydration-remaining">Sisa 2.500 ml</p>
+        <div id="hydration-status"></div>
+        <div class="hydration-actions">
+          <button type="button" onclick="addHydration(250)">+250 ml</button>
+          <button type="button" onclick="addHydration(500)">+500 ml</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <section class="weekly-consistency-card">
+    <div class="weekly-consistency-header">
+      <div>
+        <h3>Konsistensi mingguan</h3>
+      </div>
+    </div>
+    <div class="weekly-consistency-chart" id="weekly-consistency-chart"></div>
+  </section>
+</div>
+
+<!-- Modal Form Add Habit -->
+<div class="modal-overlay" id="habit-modal">
+  <div class="modal-box">
+    <h3>Tambah Kebiasaan Baru</h3>
+    <form id="form-add-habit" style="margin-top: 16px;">
+      {% csrf_token %}
+      <div style="margin-bottom: 12px;">
+        <label style="font-size: 0.8rem; font-weight: 600;">Judul Kebiasaan</label>
+        <input type="text" name="title" required style="width: 100%; padding: 8px; border-radius: 8px; border: 1px solid #ccc; margin-top: 4px;">
+      </div>
+      <div style="margin-bottom: 12px;">
+        <label style="font-size: 0.8rem; font-weight: 600;">Kategori</label>
+        <select name="category" style="width: 100%; padding: 8px; border-radius: 8px; border: 1px solid #ccc; margin-top: 4px;">
+          <option value="water">Hidrasi</option>
+          <option value="food">Pola Makan</option>
+          <option value="exercise">Olahraga</option>
+          <option value="sleep">Kualitas Tidur</option>
+          <option value="mindfulness">Eco-Mindfulness</option>
+        </select>
+      </div>
+      <div style="display: flex; gap: 12px; margin-bottom: 20px;">
+        <div style="flex: 1;">
+          <label style="font-size: 0.8rem; font-weight: 600;">Target</label>
+          <input type="number" name="target_value" value="1" required style="width: 100%; padding: 8px; border-radius: 8px; border: 1px solid #ccc; margin-top: 4px;">
+        </div>
+        <div style="flex: 1;">
+          <label style="font-size: 0.8rem; font-weight: 600;">Satuan</label>
+          <input type="text" name="unit" value="kali" required style="width: 100%; padding: 8px; border-radius: 8px; border: 1px solid #ccc; margin-top: 4px;">
+        </div>
+      </div>
+      <div style="display: flex; justify-content: flex-end; gap: 8px;">
+        <button type="button" id="btn-close-modal" style="padding: 8px 16px; border: none; background: #e5e7eb; border-radius: 8px; cursor: pointer;">Batal</button>
+        <button type="submit" class="btn-primary">Simpan</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Modal Form Tambah Progress Habit -->
+<div class="modal-overlay" id="habit-progress-modal">
+  <div class="modal-box">
+    <h3>Tambah progress kebiasaan</h3>
+    <p class="modal-description">Masukkan progress yang baru saja kamu lakukan.</p>
+    <form id="form-habit-progress">
+      {% csrf_token %}
+      <label for="input-habit-progress">Tambahan progress</label>
+      <input type="number" id="input-habit-progress" min="1" required>
+      <div class="modal-actions">
+        <button type="button" class="btn-secondary" id="btn-close-habit-progress">Batal</button>
+        <button type="submit" class="btn-primary">Tambah</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Modal Form Log Energy -->
+<div class="modal-overlay" id="energy-modal">
+  <div class="modal-box">
+      <h3>Pengaturan Waktu Fokus</h3>
+    <form id="form-log-energy" style="margin-top: 16px;">
+      {% csrf_token %}
+      <div style="margin-bottom: 20px;">
+        <label style="font-size: 0.8rem; font-weight: 600;">Target Waktu Fokus Belajar Hari Ini (Menit)</label>
+        <input type="number" name="focus_minutes" id="input-focus-minutes" min="0" value="195" required style="width: 100%; padding: 8px; border-radius: 8px; border: 1px solid #ccc; margin-top: 4px;">
+      </div>
+      <div style="display: flex; justify-content: flex-end; gap: 8px;">
+        <button type="button" id="btn-close-energy-modal" style="padding: 8px 16px; border: none; background: #e5e7eb; border-radius: 8px; cursor: pointer;">Batal</button>
+        <button type="submit" class="btn-primary">Simpan Refleksi</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Modal Form Tambah Waktu Fokus -->
+<div class="modal-overlay" id="add-focus-modal">
+  <div class="modal-box">
+    <h3>Tambah Sesi Fokus</h3>
+    <p style="font-size: 0.85rem; color: #666; margin-top: 4px;">Masukkan durasi sesi fokus yang baru saja Anda selesaikan.</p>
+    <form id="form-add-focus-time" style="margin-top: 16px;">
+      {% csrf_token %}
+      <div style="margin-bottom: 16px;">
+        <label style="font-size: 0.8rem; font-weight: 600;">Durasi Fokus (Menit)</label>
+        <input type="number" name="additional_minutes" id="input-additional-minutes" min="1" value="25" required style="width: 100%; padding: 8px; border-radius: 8px; border: 1px solid #ccc; margin-top: 4px;">
+      </div>
+      <div style="display: flex; gap: 8px; margin-bottom: 20px;">
+        <button type="button" class="btn-quick-add" onclick="setQuickMinutes(15)" style="padding: 6px 12px; border: 1px solid #ccc; border-radius: 6px; background: #f9fafb; cursor: pointer;">+15m</button>
+        <button type="button" class="btn-quick-add" onclick="setQuickMinutes(25)" style="padding: 6px 12px; border: 1px solid #ccc; border-radius: 6px; background: #f9fafb; cursor: pointer;">+25m</button>
+        <button type="button" class="btn-quick-add" onclick="setQuickMinutes(45)" style="padding: 6px 12px; border: 1px solid #ccc; border-radius: 6px; background: #f9fafb; cursor: pointer;">+45m</button>
+        <button type="button" class="btn-quick-add" onclick="setQuickMinutes(60)" style="padding: 6px 12px; border: 1px solid #ccc; border-radius: 6px; background: #f9fafb; cursor: pointer;">+60m</button>
+      </div>
+      <div style="display: flex; justify-content: flex-end; gap: 8px;">
+        <button type="button" id="btn-close-add-focus-modal" style="padding: 8px 16px; border: none; background: #e5e7eb; border-radius: 8px; cursor: pointer;">Batal</button>
+        <button type="submit" class="btn-primary">Catat Fokus</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Modal Form Pengaturan Kualitas Tidur -->
+<div class="modal-overlay" id="sleep-modal">
+  <div class="modal-box">
+    <h3>Pengaturan & Catat Tidur</h3>
+    <p style="font-size: 0.85rem; color: #666; margin-top: 4px;">Atur target durasi tidur dan catat durasi tidur malam terakhir Anda.</p>
+    <form id="form-log-sleep" style="margin-top: 16px;">
+      {% csrf_token %}
+      <div style="margin-bottom: 12px;">
+        <label style="font-size: 0.8rem; font-weight: 600;">Target Durasi Tidur (Jam)</label>
+        <input type="number" step="0.5" min="1" max="24" name="target_hours" id="input-sleep-target" value="7.5" required style="width: 100%; padding: 8px; border-radius: 8px; border: 1px solid #ccc; margin-top: 4px;">
+      </div>
+      <div style="margin-bottom: 20px;">
+        <label style="font-size: 0.8rem; font-weight: 600;">Durasi Tidur Malam Terakhir</label>
+        <div style="display: flex; gap: 8px; margin-top: 4px;">
+          <div style="flex: 1;">
+            <span style="font-size: 0.75rem; color: #666;">Jam</span>
+            <input type="number" min="0" max="23" name="sleep_hours" id="input-sleep-hours" value="7" required style="width: 100%; padding: 8px; border-radius: 8px; border: 1px solid #ccc; margin-top: 2px;">
+          </div>
+          <div style="flex: 1;">
+            <span style="font-size: 0.75rem; color: #666;">Menit</span>
+            <input type="number" min="0" max="59" name="sleep_minutes" id="input-sleep-minutes" value="24" required style="width: 100%; padding: 8px; border-radius: 8px; border: 1px solid #ccc; margin-top: 2px;">
+          </div>
+        </div>
+      </div>
+      <div style="display: flex; justify-content: flex-end; gap: 8px;">
+        <button type="button" id="btn-close-sleep-modal" style="padding: 8px 16px; border: none; background: #e5e7eb; border-radius: 8px; cursor: pointer;">Batal</button>
+        <button type="submit" class="btn-primary">Simpan Pengaturan</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Toast Container -->
+<div class="toast-container" id="toast-container"></div>
+{% endblock content %}
+
+{% block extra_js %}
+<script src="{% static 'js/habit_tracker.js' %}"></script>
+{% endblock extra_js %}

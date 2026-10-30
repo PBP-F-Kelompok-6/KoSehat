@@ -106,3 +106,63 @@ class CommunityComment(models.Model):
 
     def __str__(self):
         return self.content[:50]
+
+class WeeklyBudget(models.Model):
+    """Target anggaran makan mingguan milik pengguna."""
+
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="kosehat_weekly_budgets",
+    )
+    week_start = models.DateField(
+        help_text="Tanggal hari Senin pada minggu tersebut."
+    )
+    amount = models.PositiveIntegerField(
+        help_text="Target anggaran dalam Rupiah."
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["-week_start"]
+        constraints = [
+            models.UniqueConstraint(
+                fields=["user", "week_start"],
+                name="unique_dashboard_weekly_budget",
+            )
+        ]
+
+    def __str__(self):
+        return f"{self.user} - {self.week_start}: Rp {self.amount}"
+
+
+class WalkingActivity(models.Model):
+    """Catatan berjalan kaki mandiri milik Modul 4."""
+
+    class SpeedLevel(models.TextChoices):
+        SLOW = "slow", "Lambat"
+        NORMAL = "normal", "Normal"
+        FAST = "fast", "Cepat"
+
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="kosehat_walking_activities",
+    )
+    duration_minutes = models.PositiveIntegerField()
+    speed_level = models.CharField(
+        max_length=10,
+        choices=SpeedLevel.choices,
+        default=SpeedLevel.NORMAL,
+    )
+    activity_date = models.DateField()
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["-activity_date", "-created_at"]
+        indexes = [models.Index(fields=["user", "activity_date"])]
+
+    def __str__(self):
+        return f"{self.user} - {self.activity_date}: {self.duration_minutes} menit"

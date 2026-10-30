@@ -4,7 +4,7 @@
   Impact Analytics - KoSehat
 {% endblock title %}
 {% block extra_css %}
-  <link rel="stylesheet" href="{% static 'dashboard_analytics/css/module4.css' %}?v=20261027-4">
+  <link rel="stylesheet" href="{% static 'dashboard_analytics/css/module4.css' %}?v=20261030-icons">
 {% endblock extra_css %}
 {% block content %}
   <div class="m4-page m4-impact-page">
@@ -14,7 +14,7 @@
         <h1>Kebiasaanmu punya dampak yang bisa dihitung.</h1>
         <p class="m4-subtitle">Lihat bagaimana pilihan makan dan penggunaan ulang mengurangi sampah kemasan serta emisi.</p>
       </div>
-      <button class="m4-icon-button" type="button" aria-label="Notifikasi" data-action="notifications">♧</button>
+      <button class="m4-icon-button" type="button" aria-label="Notifikasi" data-action="notifications">🔔</button>
     </header>
     <div class="m4-toolbar">
       <nav class="m4-period-tabs" aria-label="Rentang waktu analitik">
@@ -25,33 +25,103 @@
       <a class="m4-report-button" href="{% url 'dashboard_analytics:download_report' %}?period={{ selected_period }}">↓ &nbsp; Unduh laporan CSV</a>
     </div>
     <section class="m4-stat-grid" aria-label="Ringkasan dampak">
-      
+
+      <!-- Card 1: Kontribusi Pengurangan Kemasan -->
       <article class="m4-stat-card">
-        <span class="m4-stat-icon m4-icon-leaf">♧</span>
-        <p>Estimasi kemasan dihindari</p>
-        <h2>{{ analytics.summary.packages }} item</h2>
-        <small>Perkiraan 1 kemasan dihindari per menu tanpa kemasan sekali pakai.</small>
+        <span class="m4-stat-icon m4-icon-leaf">🌱</span>
+        <p>Pengurangan Kemasan</p>
+        <h2>{{ analytics.summary.contributions }} kontribusi</h2>
+        <small>
+          {{ analytics.summary.impact_entries }} dari aktivitas pengurangan kemasan dan
+          {{ analytics.meal_contribution.count }} dari menu tanpa kemasan sekali pakai.
+        </small>
       </article>
 
+      <!-- Card 2: Konsistensi Memasak Sendiri -->
       <article class="m4-stat-card">
-        <span class="m4-stat-icon m4-icon-spark">✦</span>
-        <p>Emisi dihemat</p>
-        <h2>{{ analytics.summary.emissions }}</h2>
-        <small>Belum ada rumus atau sumber emisi yang tervalidasi.</small>
+        <span class="m4-stat-icon m4-icon-spark">🌱</span>
+        <p>Konsistensi Memasak Sendiri</p>
+        <h2>{{ analytics.summary.homemade_menus }} menu</h2>
+        <small>Jumlah menu homemade yang tercatat selama periode ini.</small>
       </article>
 
-      <article class="m4-stat-card">
-        <span class="m4-stat-icon m4-icon-money">₿</span>
-        <p>Uang dihemat</p>
-        <h2>{{ analytics.summary.savings }}</h2>
-        <small>Belum ada sumber data penghematan yang tervalidasi.</small>
-      </article>
+      <!-- Card 3: Anggaran Mingguan (2 kolom) -->
+      <article class="m4-stat-card m4-budget-card m4-budget-highlight">
+        <span class="m4-stat-icon m4-icon-money">Rp</span>
+        <p>Anggaran Mingguan</p>
 
-      <article class="m4-stat-card">
-        <span class="m4-stat-icon m4-icon-plant">♡</span>
-        <p>Porsi plant-based</p>
-        <h2>{{ analytics.summary.plant_based }}</h2>
-        <small>Memerlukan data menu dari Meal Planner.</small>
+        {% if analytics.weekly_budget.has_budget %}
+          <h2>Rp {{ analytics.weekly_budget.amount_display }}</h2>
+
+          <small>
+            Minggu {{ analytics.weekly_budget.week_start|date:"d M" }}
+            – {{ analytics.weekly_budget.week_end|date:"d M Y" }}
+          </small>
+
+          <div class="m4-budget-details">
+            <div
+              class="m4-budget-track"
+              role="progressbar"
+              aria-label="Penggunaan anggaran mingguan"
+              aria-valuemin="0"
+              aria-valuemax="100"
+              aria-valuenow="{{ analytics.weekly_budget.progress_width }}"
+            >
+              <div
+                class="m4-budget-fill"
+                style="width: {{ analytics.weekly_budget.progress_width }}%"
+              ></div>
+            </div>
+
+            <div class="m4-budget-info">
+              <span>Terpakai: Rp {{ analytics.weekly_budget.spent_display }}</span>
+              <strong>{{ analytics.weekly_budget.percent }}%</strong>
+            </div>
+
+            {% if analytics.weekly_budget.is_over_budget %}
+              <small class="m4-budget-warning">
+                Anggaran terlampaui Rp {{ analytics.weekly_budget.over_budget_display }}.
+              </small>
+            {% else %}
+              <small>
+                Sisa anggaran: Rp {{ analytics.weekly_budget.remaining_display }}
+              </small>
+            {% endif %}
+          </div>
+
+        {% else %}
+          <h2>-</h2>
+          <small>Anggaran mingguan belum diatur.</small>
+
+          <div class="m4-budget-details">
+            <div
+              class="m4-budget-track"
+              role="progressbar"
+              aria-label="Penggunaan anggaran mingguan"
+              aria-valuemin="0"
+              aria-valuemax="100"
+              aria-valuenow="0"
+            >
+              <div class="m4-budget-fill" style="width: 0%"></div>
+            </div>
+
+            <span>Biaya minggu ini: Rp {{ analytics.weekly_budget.spent_display }}</span>
+          </div>
+        {% endif %}
+
+        {% if user.is_authenticated %}
+          <div class="m4-budget-actions">
+            <button
+              type="button"
+              class="m4-primary-button m4-budget-button"
+              data-action="set-budget"
+            >
+              ✎ &nbsp; Atur Anggaran
+            </button>
+          </div>
+        {% else %}
+          <small>Silakan login untuk mengatur anggaran mingguan.</small>
+        {% endif %}
       </article>
 
     </section>
@@ -62,26 +132,26 @@
       <article class="m4-panel m4-chart-panel">
         <div class="m4-panel-heading">
           <div>
-            <h2>Tren pengurangan kemasan</h2>
-            <p>Jumlah item • {{ analytics.label }}</p>
+            <h2>Tren kontribusi pengurangan kemasan</h2>
+            <p>Jumlah kontribusi • {{ analytics.label }}</p>
           </div>
-          <button class="m4-more-button" type="button" aria-label="Opsi grafik" data-action="panel-options" data-panel="Tren pengurangan kemasan">•••</button>
+          <button class="m4-more-button" type="button" aria-label="Opsi grafik" data-action="panel-options" data-panel="Tren kontribusi pengurangan kemasan">•••</button>
         </div>
+
         <div class="m4-chart-summary">
-          <strong>{{ analytics.summary.packages }} item</strong>
+          <strong>{{ analytics.summary.contributions }} kontribusi</strong>
           <span>{{ analytics.change_label }}</span>
         </div>
-        <div class="m4-line-chart" role="img" aria-label="Grafik pengurangan kemasan untuk {{ analytics.label }}">
+
+        <div class="m4-line-chart" role="img" aria-label="Grafik kontribusi pengurangan kemasan untuk {{ analytics.label }}">
+
           <div class="m4-chart-legend">
             <span>
               <i class="m4-legend-september"></i>
               {{ analytics.label }}
             </span>
-            <span>
-              <i class="m4-legend-target"></i>
-              Target
-            </span>
           </div>
+
           <div class="m4-chart-canvas">
             <div class="m4-grid-lines" aria-hidden="true">
               <i></i>
@@ -89,12 +159,14 @@
               <i></i>
               <i></i>
             </div>
+
             <svg class="m4-chart-svg" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
               <polyline class="m4-chart-polyline" points="{% for point in analytics.chart_points %}{{ point.x }},{{ point.y }} {% endfor %}"></polyline>
               {% for point in analytics.chart_points %}
                 <circle cx="{{ point.x }}" cy="{{ point.y }}" r="1.25"></circle>
               {% endfor %}
             </svg>
+
           </div>
           
           
@@ -108,24 +180,13 @@
               {% endif %}
             {% endfor %}
           </div>
+
       </article>
 
-      <article class="m4-panel m4-target-panel">
-        <div class="m4-panel-heading">
-          <div>
-            <h2>Target {{ analytics.label|lower }}</h2>
-            <p>{{ analytics.summary.packages }} dari {{ analytics.target }} item</p>
-          </div>
-          <button class="m4-more-button" type="button" aria-label="Opsi target" data-action="panel-options" data-panel="Target bulanan">•••</button>
-        </div>
-        <div class="m4-progress-ring" style="--m4-progress: {{ analytics.percent }}">
-          <div>
-            <strong>{{ analytics.percent }}%</strong>
-            <span>TERCAPAI</span>
-          </div>
-        </div>
-        <p class="m4-target-copy">Hindari {{ analytics.remaining }} kemasan lagi untuk mencapai target periode ini.</p>
-        <span class="m4-rank-badge">Peringkat belum tersedia</span>
+      <article class="m4-panel m4-motivation-panel">
+        <p class="m4-eyebrow">KEBIASAAN BERKELANJUTAN</p>
+        <h2>Setiap langkah kecil tetap berarti.</h2>
+        <p>Yuk, terus bangun kebiasaan baik hari ini—pilihan yang tercatat membantumu melihat dampak secara lebih sadar.</p>
       </article>
 
     </section>
@@ -134,7 +195,7 @@
         <div class="m4-panel-heading">
           <div>
             <h2>Sumber pengurangan</h2>
-            <p>Kontribusi berdasarkan kebiasaan</p>
+            <p>Menu tanpa kemasan sekali pakai menurut waktu makan</p>
           </div>
           <button class="m4-more-button" type="button" aria-label="Opsi sumber" data-action="panel-options" data-panel="Sumber pengurangan">•••</button>
         </div>
@@ -143,7 +204,7 @@
             <div class="m4-source-row">
               <div>
                 <span>{{ source.label }}</span>
-                <strong>{{ source.value }} item</strong>
+                <strong>{{ source.value }} kontribusi</strong>
               </div>
               <div class="m4-source-track">
                 <i class="m4-source-fill {{ source.color }}" style="width: {{ source.percent }}%"></i>
@@ -151,55 +212,109 @@
             </div>
           {% endfor %}
         </div>
+        {% if analytics.meal_contribution.count == 0 %}
+          <p class="m4-source-note">Belum ada menu tanpa kemasan sekali pakai pada periode ini.</p>
+        {% endif %}
       </article>
       
       
       <article class="m4-panel m4-equivalent-panel">
         <div class="m4-panel-heading">
           <div>
-            <h2>Dampak setara</h2>
-            <p>Supaya angkanya terasa nyata</p>
+            <h2>Kebiasaan Makan Ramah Lingkungan</h2>
+            <p>Ringkasan menu yang tercatat tanpa kemasan sekali pakai</p>
           </div>
           <button
             class="m4-more-button"
             type="button"
-            aria-label="Opsi dampak"
+            aria-label="Opsi kebiasaan makan ramah lingkungan"
             data-action="panel-options"
-            data-panel="Dampak setara"
+            data-panel="Kebiasaan Makan Ramah Lingkungan"
           >•••</button>
         </div>
 
-        <div class="m4-equivalent-cards">
+        <div class="m4-equivalent-cards m4-eco-eating-cards">
           <div class="m4-equivalent-card m4-equivalent-green">
-            <span>♧</span>
-            <strong>Belum dihitung</strong>
-            <p>Estimasi penghematan emisi belum tersedia.</p>
+            <span>🌱</span>
+            <strong>{{ analytics.eco_eating.packaging_free_menus }}</strong>
+            <p>Menu tanpa kemasan</p>
           </div>
 
           <div class="m4-equivalent-card m4-equivalent-yellow">
-            <span>♨</span>
-            <strong>Belum dihitung</strong>
-            <p>Data penghematan air produksi belum tersedia.</p>
+            <span>🌱</span>
+            <strong>{{ analytics.eco_eating.friendly_days }} hari</strong>
+            <p>Hari ramah lingkungan</p>
           </div>
-        </div>
 
-        <p class="m4-community-note">
-          ✦
-          <span>Estimasi dampak komunitas akan tersedia setelah data aktivitas terkumpul.</span>
-        </p>
+        </div>
 
       </article>
     </section>
     {% if analytics.has_milestone %}
       <section class="m4-milestone" id="m4-milestone">
-        <span>✦</span>
+        <span>🌱</span>
         <div>
-          <h2>Milestone baru: 100 kemasan dihindari!</h2>
-          <p>Kamu telah mencatat {{ analytics.all_time_packages }} kemasan yang dihindari.</p>
+          <h2>Milestone baru: 100 kontribusi tercatat!</h2>
+          <p>Kamu telah mencatat {{ analytics.all_time_contributions }} kontribusi pengurangan kemasan.</p>
         </div>
         <button type="button" data-action="share-impact">Bagikan dampak</button>
       </section>
     {% endif %}
+  </div>
+    <!-- Modal Atur Anggaran Mingguan -->
+  <div class="m4-modal-backdrop" id="m4-budget-modal" hidden>
+
+    <section
+      class="m4-modal"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="m4-budget-modal-title"
+    >
+      <button
+        type="button"
+        class="m4-modal-close"
+        data-action="close-budget-modal"
+        aria-label="Tutup"
+      >×</button>
+
+      <p class="m4-eyebrow">ANGGARAN MAKAN</p>
+
+      <h2 id="m4-budget-modal-title">Atur Anggaran Mingguan</h2>
+
+      <p class="m4-modal-copy">
+        Tentukan batas pengeluaran makanmu untuk minggu ini.
+        Biaya akan dihitung otomatis dari Meal Planner.
+      </p>
+
+      <form id="m4-budget-form">
+        {% csrf_token %}
+
+        <label for="m4-budget-amount">
+          Nominal anggaran (Rupiah)
+        </label>
+
+        <input
+          id="m4-budget-amount"
+          name="amount"
+          type="number"
+          min="1"
+          max="100000000"
+          step="1"
+          required
+          placeholder="Contoh: 250000"
+          value="{% if analytics.weekly_budget.has_budget %}{{ analytics.weekly_budget.amount }}{% endif %}"
+        >
+
+        <p class="m4-form-hint">
+          Masukkan angka tanpa titik atau simbol Rp.
+        </p>
+
+        <button class="m4-primary-button" type="submit">
+          Simpan anggaran
+        </button>
+      </form>
+    </section>
+
   </div>
   <div class="m4-toast" id="m4-toast" role="status" aria-live="polite" hidden></div>
 {% endblock content %}

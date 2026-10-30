@@ -14,7 +14,12 @@ from pathlib import Path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
+import os
+from dotenv import load_dotenv
 
+load_dotenv(BASE_DIR / '.env')
+USDA_API_KEY = os.environ.get('USDA_API_KEY') or 'DEMO_KEY'
+SPOONACULAR_API_KEY = 'fad7be18939e4bb18c2c714a33080a66'
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.0/howto/deployment/checklist/
@@ -41,6 +46,16 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'habit_tracker',
+    'meal_planner',
+    'django_cas_ng',
+    'user_profile',
+
+    # Modul KoSehat
+    'recipe_catalog',
+
+    # Modul 4 — Dashboard & Impact Analytics
+    'app.dashboard_analytics',
 ]
 
 MIDDLEWARE = [
@@ -108,9 +123,9 @@ AUTH_PASSWORD_VALIDATORS = [
 # Internationalization
 # https://docs.djangoproject.com/en/5.0/topics/i18n/
 
-LANGUAGE_CODE = 'en-us'
+LANGUAGE_CODE = 'id'
 
-TIME_ZONE = 'UTC'
+TIME_ZONE = "Asia/Jakarta"
 
 USE_I18N = True
 
@@ -132,3 +147,10 @@ STATIC_ROOT = BASE_DIR / 'staticfiles'
 # https://docs.djangoproject.com/en/5.0/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+AUTHENTICATION_BACKENDS = [
+    'django.contrib.auth.backends.ModelBackend',
+]
+
+LOGIN_URL = '/auth/login/'
+LOGIN_REDIRECT_URL = '/auth/profile/'
