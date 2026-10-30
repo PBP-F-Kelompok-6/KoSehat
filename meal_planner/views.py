@@ -1,7 +1,7 @@
 from datetime import date, timedelta
 
 from django.contrib import messages
-from django.contrib.auth import get_user_model
+from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
@@ -25,14 +25,6 @@ def _parse_date(value, default):
         return default
 
 
-def _user(request):
-    # SEMENTARA (tanpa login): pakai user 'demo' kalau belum login.
-    if request.user.is_authenticated:
-        return request.user
-    user, _ = get_user_model().objects.get_or_create(username='demo')
-    return user
-
-
 def _monday(d):
     return d - timedelta(days=d.weekday())
 
@@ -44,7 +36,7 @@ def _eco_message(meal_count, homemade_count, packaging_used):
     if homemade_count == 0:
         return 'Belum ada menu masak sendiri di minggu ini. Coba satu dulu, dompet dan bumi sama-sama senang.'
     if packaging_used == 0:
-        return f'Mantap! {homemade_count} dari {meal_count} menu masak sendiri dan tanpa kemasan sekali pakai.'
+        return f'Mantap! {homemade_count} dari {meal_count} menu masak sendiri dan tanpa kemasan plastik.'
     return f'Mantap, {homemade_count} dari {meal_count} menu masak sendiri di minggu ini.'
 
 
@@ -62,12 +54,13 @@ def _planner_url(d):
     return f"{reverse('meal_planner:index')}?start={_monday(d).isoformat()}"
 
 
+@login_required
 def planner(request):
     today = timezone.localdate()
     start = _monday(_parse_date(request.GET.get('start'), today))
     end = start + timedelta(days=6)
 
-    meals = list(Meal.objects.filter(user=_user(request), date__range=(start, end)))
+    meals = list(Meal.objects.filter(user=request.user, date__range=(start, end)))
     by_date = {}
     for meal in meals:
         by_date.setdefault(meal.date, []).append(meal)
@@ -111,21 +104,23 @@ def planner(request):
     })
 
 
+@login_required
 def meal_create(request):
     initial_date = _parse_date(request.GET.get('date'), timezone.localdate())
     form = MealForm(request.POST or None, initial={'date': initial_date})
     if request.method == 'POST' and form.is_valid():
         meal = form.save(commit=False)
-        meal.user = _user(request)
+        meal.user = request.user
         meal.save()
         messages.success(request, 'Menu berhasil ditambahkan.')
         return redirect(_planner_url(meal.date))
     return render(request, 'meal_form.html', {'form': form, 'title': 'Tambah Menu'})
 
 
+@login_required
 def meal_update(request, pk):
     # filter user: user cuma bisa mengubah menu miliknya sendiri
-    meal = get_object_or_404(Meal, pk=pk, user=_user(request))
+    meal = get_object_or_404(Meal, pk=pk, user=request.user)
     form = MealForm(request.POST or None, instance=meal)
     if request.method == 'POST' and form.is_valid():
         form.save()
@@ -134,10 +129,11 @@ def meal_update(request, pk):
     return render(request, 'meal_form.html', {'form': form, 'title': 'Ubah Menu'})
 
 
+@login_required
 @require_POST
 def meal_delete(request, pk):
     # filter user: user cuma bisa hapus menu miliknya sendiri
-    meal = get_object_or_404(Meal, pk=pk, user=_user(request))
+    meal = get_object_or_404(Meal, pk=pk, user=request.user)
     meal_date = meal.date
     meal.delete()
     messages.success(request, 'Menu dihapus.')
@@ -147,6 +143,8 @@ def meal_delete(request, pk):
 @require_POST
 def estimate_calories(request):
     """Dipanggil dari form lewat JavaScript. Mengembalikan JSON."""
+    if not request.user.is_authenticated:
+        return JsonResponse({'error': 'Silakan login dulu.'}, status=401)
     try:
         result = nutrition.estimate_total(request.POST.get('ingredients', ''))
     except nutrition.NutritionError as e:

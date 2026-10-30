@@ -47,6 +47,8 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'meal_planner',
+    'django_cas_ng',
+    'user_profile',
 ]
 
 MIDDLEWARE = [
@@ -116,7 +118,7 @@ AUTH_PASSWORD_VALIDATORS = [
 
 LANGUAGE_CODE = 'en-us'
 
-LOGIN_URL = '/admin/login/'     # tambah
+
 TIME_ZONE = 'Asia/Jakarta'      # ganti dari 'UTC'
 
 USE_I18N = True
@@ -139,3 +141,15 @@ STATIC_ROOT = BASE_DIR / 'staticfiles'
 # https://docs.djangoproject.com/en/5.0/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+AUTHENTICATION_BACKENDS = (
+    'django.contrib.auth.backends.ModelBackend',
+    'django_cas_ng.backends.CASBackend',
+)
+
+CAS_SERVER_URL = 'https://sso.ui.ac.id/cas/2'
+CAS_VERSION = '3'
+CAS_LOGOUT_COMPLETELY = True
+CAS_STORE_NEXT_SETTINGS = True
+LOGIN_URL = '/auth/login/'
+LOGIN_REDIRECT_URL = '/auth/profile/'
