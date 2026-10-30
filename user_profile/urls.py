@@ -1,9 +1,10 @@
 from django.urls import path
-import django_cas_ng.views as cas_views
 from . import views
 
+app_name = 'user_profile'
+
 urlpatterns = [
-    path('login/', cas_views.LoginView.as_view(), name='cas_ng_login'),
-    path('logout/', cas_views.LogoutView.as_view(), name='cas_ng_logout'),
+    path('login/', views.login_view, name='login'),
+    path('logout/', views.logout_view, name='logout'),
     path('profile/', views.profile_view, name='profile'),
 ]
