@@ -11,3 +11,4 @@ urlpatterns = [
     path('meal-planner/', include('meal_planner.urls')),
     path('catalog/', include('recipe_catalog.urls')),
     path("habit-tracker/", include("habit_tracker.urls")),
+]
