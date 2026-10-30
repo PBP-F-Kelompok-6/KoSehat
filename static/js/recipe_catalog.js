@@ -442,24 +442,39 @@ let currentActiveRecipeId = null;
   
   const modeTabs = document.querySelectorAll(".mode-tab");
   const catalogContainer = document.getElementById("catalogContainer");
+  const btnSeeAllEdu = document.querySelector(".btn-see-all-edu");
+
+  function setViewMode(selectedMode) {
+    if (catalogContainer) {
+      catalogContainer.setAttribute("data-view-mode", selectedMode);
+      console.log("🔀 [KoSehat] View mode diubah ke:", selectedMode);
+    }
+
+    // Sinkronkan kelas 'active' pada semua tombol mode tab
+    modeTabs.forEach((tab) => {
+      if (tab.dataset.mode === selectedMode) {
+        tab.classList.add("active");
+      } else {
+        tab.classList.remove("active");
+      }
+    });
+  }
 
   if (modeTabs.length > 0) {
     modeTabs.forEach((tab) => {
       tab.addEventListener("click", function (e) {
         e.preventDefault();
-        
-        // Pindah class 'active' ke tombol yang baru diklik
-        modeTabs.forEach((t) => t.classList.remove("active"));
-        this.classList.add("active");
-
-        // Ambil nilai data-mode (semua / resep / edukasi)
         const selectedMode = this.dataset.mode || "semua";
-
-        // Ubah attribute data-view-mode di container utama
-        if (catalogContainer) {
-          catalogContainer.setAttribute("data-view-mode", selectedMode);
-        }
+        setViewMode(selectedMode);
       });
+    });
+  }
+
+  if (btnSeeAllEdu) {
+    btnSeeAllEdu.addEventListener("click", function (e) {
+      e.preventDefault();
+      setViewMode("edukasi");
+      window.scrollTo({ top: 150, behavior: "smooth" });
     });
   }
 });
