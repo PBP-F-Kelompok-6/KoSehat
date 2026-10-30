@@ -89,6 +89,11 @@ async function loadHabits() {
     if (!res.ok) throw new Error('Gagal memuat data');
     const data = await res.json();
 
+    // KPI Streak Elements
+    const kpiStreak = document.getElementById('kpi-streak');
+    const kpiStreakSub = document.getElementById('kpi-streak-sub');
+
+    // KPI General Elements
     const kpiCompleted = document.getElementById('kpi-completed');
     const kpiRemaining = document.getElementById('kpi-remaining');
     const progressBar = document.getElementById('habit-progress-bar');
@@ -99,10 +104,20 @@ async function loadHabits() {
     const kpiFocusTargetText = document.getElementById('kpi-focus-target-text');
     const badgeContainer = document.getElementById('kpi-focus-badge-container');
 
+    // Update KPI Streak & Best Streak
+    if (kpiStreak && data.summary.streak !== undefined) {
+      kpiStreak.innerText = `${data.summary.streak} hari`;
+    }
+    if (kpiStreakSub && data.summary.best_streak !== undefined) {
+      kpiStreakSub.innerText = `Rekor terbaik: ${data.summary.best_streak} hari`;
+    }
+
+    // Update KPI Kebiasaan
     if (kpiCompleted) kpiCompleted.innerText = `${data.summary.completed} / ${data.summary.total}`;
     if (kpiRemaining) kpiRemaining.innerText = `${data.summary.total - data.summary.completed} target belum selesai`;
     if (progressBar) progressBar.style.width = `${data.summary.progress_percent}%`;
     
+    // Update KPI Energi Pagi
     if (kpiEnergy && data.summary.energy_level !== undefined) {
       kpiEnergy.innerText = `${data.summary.energy_level} / 10`;
       const inputEnergy = document.getElementById('input-energy-level');
@@ -128,6 +143,7 @@ async function loadHabits() {
       }
     }
 
+    // Render Daftar Kebiasaan (Habit List)
     const container = document.getElementById('habit-list-container');
     if (!container) return;
     container.innerHTML = '';

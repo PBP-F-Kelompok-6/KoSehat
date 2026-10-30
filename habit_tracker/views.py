@@ -1,12 +1,55 @@
 import json
+from datetime import timedelta
 from django.shortcuts import render, get_object_or_404
 from django.http import JsonResponse
 from django.views.decorators.http import require_POST, require_GET
 from django.contrib.auth.decorators import login_required
 from django.utils import timezone
-from .models import Habit, HabitLog, SleepLog, EnergyLog
+from .models import Habit, HabitLog, SleepLog, EnergyLog, UserStreak
 from .forms import HabitForm, EnergyLogForm, AddFocusTimeForm
 
+def get_or_update_user_streak(user, today):
+    streak_obj, created = UserStreak.objects.get_or_create(user=user)
+
+    if created or streak_obj.last_checked_date is None:
+        streak_obj.last_checked_date = today
+        streak_obj.save()
+        return streak_obj
+
+    if streak_obj.last_checked_date >= today:
+        return streak_obj
+
+    check_date = streak_obj.last_checked_date
+    current_streak = streak_obj.current_streak
+    best_streak = streak_obj.best_streak
+
+    # Evaluasi setiap hari dari last_checked_date sampai kemarin (today - 1 hari)
+    while check_date < today:
+        habits_on_date = Habit.objects.filter(user=user, created_at__date__lte=check_date)
+        
+        if habits_on_date.exists():
+            total_habits = habits_on_date.count()
+            completed_logs = HabitLog.objects.filter(
+                habit__in=habits_on_date,
+                date=check_date,
+                is_completed=True
+            ).count()
+
+            if completed_logs >= total_habits and total_habits > 0:
+                current_streak += 1
+                if current_streak > best_streak:
+                    best_streak = current_streak
+            else:
+                current_streak = 0
+
+        check_date += timedelta(days=1)
+
+    streak_obj.current_streak = current_streak
+    streak_obj.best_streak = best_streak
+    streak_obj.last_checked_date = today
+    streak_obj.save()
+
+    return streak_obj
 
 def format_minutes(total_minutes):
     """Mengubah durasi menit menjadi format string 'Xj Ym' atau 'Ym'."""
@@ -54,6 +97,9 @@ def get_habits_json(request):
     total_habits = len(habits_data)
     progress_percent = int((completed_count / total_habits * 100)) if total_habits > 0 else 0
 
+    # Hitung & Dapatkan status Streak
+    streak_obj = get_or_update_user_streak(request.user, today)
+
     energy_log, _ = EnergyLog.objects.get_or_create(user=request.user, date=today)
     
     target_mins = energy_log.focus_minutes
@@ -66,6 +112,8 @@ def get_habits_json(request):
             'total': total_habits,
             'completed': completed_count,
             'progress_percent': progress_percent,
+            'streak': streak_obj.current_streak,
+            'best_streak': streak_obj.best_streak,
             'energy_level': energy_log.energy_level,
             'target_focus_minutes': target_mins,
             'logged_focus_minutes': logged_mins,

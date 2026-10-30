@@ -50,3 +50,12 @@ class EnergyLog(models.Model):
 
     def __str__(self):
         return f"Energy {self.energy_level}/10 - {self.user.username} ({self.date})"
+
+class UserStreak(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='streak')
+    current_streak = models.IntegerField(default=0)
+    best_streak = models.IntegerField(default=0)
+    last_checked_date = models.DateField(null=True, blank=True)
+
+    def __str__(self):
+        return f"{self.user.username} - Streak: {self.current_streak} (Best: {self.best_streak})"
