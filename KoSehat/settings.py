@@ -135,14 +135,9 @@ STATIC_ROOT = BASE_DIR / 'staticfiles'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-AUTHENTICATION_BACKENDS = (
+AUTHENTICATION_BACKENDS = [
     'django.contrib.auth.backends.ModelBackend',
-    'django_cas_ng.backends.CASBackend',
-)
+]
 
-CAS_SERVER_URL = 'https://sso.ui.ac.id/cas/2'
-CAS_VERSION = '3'
-CAS_LOGOUT_COMPLETELY = True
-CAS_STORE_NEXT_SETTINGS = True
 LOGIN_URL = '/auth/login/'
 LOGIN_REDIRECT_URL = '/auth/profile/'
