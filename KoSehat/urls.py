@@ -9,3 +9,4 @@ urlpatterns = [
     path("auth/", include("user_profile.urls")),
     path("meal-planner/", include("meal_planner.urls")),
     path("habit-tracker/", include("habit_tracker.urls")),
+]
